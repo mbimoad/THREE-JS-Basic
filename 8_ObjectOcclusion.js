@@ -94,13 +94,6 @@ loader.load('../models/door.glb', (glb) => {
 });
 
 loadModel({
-    path: '../models/Orc.gltf',
-    scale: 0.6,
-    positionX: 6,
-    rotationY: -Math.PI / 2,
-    animName: 'Run'
-});
-loadModel({
     path: '../models/Chicken.gltf',
     scale: 0.4,
     positionX: 0,
