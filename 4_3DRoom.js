@@ -1,36 +1,40 @@
 import * as THREE from 'three'; 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 const widths = window.innerWidth; 
 const height = window.innerHeight; 
 const aspect = widths/height; 
 const scenes = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000); 
-camera.position.set(-30, 30, 30); 
+camera.position.set(30, 20, 10); 
 camera.lookAt(0, 0, 0);  
 
 const renderer = new THREE.WebGLRenderer(); 
 renderer.setSize(widths,height); 
-renderer.setClearColor(0xEEEEEE);
+renderer.setClearColor(0x333333);
 document.body.appendChild(renderer.domElement); 
 
 const orbit = new OrbitControls(camera, renderer.domElement); 
+const light = new THREE.AmbientLight(0xCCCCCC, 4); 
 orbit.update(); 
+light.position.y = 10;
+
 
 const createPlaneGeometry = (x,y, color) => {
     return new THREE.Mesh(
         new THREE.PlaneGeometry(x, y), 
-        new THREE.MeshBasicMaterial({color: color})
+        new THREE.MeshBasicMaterial({color: color, side: THREE.DoubleSide})
     )
 }
 const ground   = createPlaneGeometry(10, 10, 0x00FF00); 
 const backwall = createPlaneGeometry(10, 3,  0xFF0000); 
 const sidewall = createPlaneGeometry(10, 3,  0x0000FF); 
 ground.rotation.x = -Math.PI/2; 
-backwall.position.z = -5; 
+backwall.position.z = 5; 
 backwall.position.y = 1.5; 
 sidewall.rotation.y = -Math.PI/2; 
-sidewall.position.x = 5; 
+sidewall.position.x = -5; 
 sidewall.position.y = 1.5; 
 
 // box
@@ -39,7 +43,43 @@ const box = new THREE.Mesh(
     new THREE.MeshStandardMaterial(), 
 ); 
 box.position.y = 0.5;
-scenes.add(ground, backwall, sidewall, box); 
+
+// Grouping into 1 Mesh 
+const room = new THREE.Group(); 
+room.add(ground);
+room.add(backwall);
+room.add(sidewall);
+room.add(box);
+room.position.y = 10;
+// Instead of this
+// scenes.add(ground, backwall, sidewall, box); 
+// use this 
+scenes.add(room, light)
+room.traverse(item => console.log(item)) // Melihat isi nya
+
+
+
+// By model 
+const modelurl = new URL('./gaming_room/scene.gltf', import.meta.url); 
+const modeload = new GLTFLoader(); 
+modeload.load(modelurl.href, item => {
+    item.scene.scale.set(0.2,0.2,0.2);
+    scenes.add(item.scene)
+    item.scene.traverse(function(child) {
+        // Hilangkan sofanya 
+        if(child.name == "sofa_17" || child.name == "bantal_1003_18") child.visible = false; 
+        // Floor 
+        if(child.name == "Object_4") {
+            const box = new THREE.Mesh(
+                new THREE.BoxGeometry(1,1,1),
+                new THREE.MeshBasicMaterial({color: 0xFF0000}), 
+            )
+            box.position.y = 0.5;
+            item.scene.add(box);
+        }
+    })
+})
+
 
 const animate = () => {
     box.rotation.y += 0.05;
