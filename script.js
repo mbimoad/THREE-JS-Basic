@@ -7,16 +7,16 @@ let height = window.innerHeight;
 let aspect = width / height;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x202020);
-
 const camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
 camera.position.set(0, 5, 15);
 camera.lookAt(0, 0, 0);
+
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(width, height);
 renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
-// --- Support
+// --- SUPPORT LIGHT & CONTROL ---
 const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.update();
 const ambient = new THREE.AmbientLight(0xffffff, 0.5);
@@ -32,7 +32,7 @@ const ground = new THREE.Mesh(
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
-// Semua geometry populer di Three.js
+// --- GEOMETRIES ---
 const geometries = [
   new THREE.BoxGeometry(1, 1, 1),             // 1. Kubus
   new THREE.SphereGeometry(0.6, 32, 32),      // 2. Bola
@@ -45,32 +45,44 @@ const geometries = [
   new THREE.PlaneGeometry(1, 1)               // 9. Bidang datar
 ];
 
-// Semua material utama di Three.js
+// --- MATERIALS ---
 const materials = [
-  new THREE.MeshBasicMaterial({ color: 0xff4444, wireframe: false }),  // Tanpa cahaya
-  new THREE.MeshNormalMaterial(),                                      // Warna berdasarkan normal
-  new THREE.MeshLambertMaterial({ color: 0x00ff88 }),                  // Reaktif ke cahaya (lembut)
-  new THREE.MeshPhongMaterial({ color: 0x4488ff, shininess: 80 }),     // Reflektif & mengkilap
+  new THREE.MeshBasicMaterial({ color: 0xff4444 }),  // Tanpa cahaya
+  new THREE.MeshNormalMaterial(),                    // Berdasarkan normal
+  new THREE.MeshLambertMaterial({ color: 0x00ff88 }),// Lembut
+  new THREE.MeshPhongMaterial({ color: 0x4488ff, shininess: 80 }), // Mengkilap
   new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.6, roughness: 0.3 }), // Realistik
-  new THREE.MeshToonMaterial({ color: 0x66ccff }),                     // Kartun-style
+  new THREE.MeshToonMaterial({ color: 0x66ccff }),   // Kartun-style
   new THREE.MeshMatcapMaterial({
-    matcap: new THREE.TextureLoader().load('https://raw.githubusercontent.com/nidorx/matcaps/master/256/DBD8C9_948E82_ADA69A_B5B0A3.png')
-  }) 
+    matcap: new THREE.TextureLoader().load(
+      'https://raw.githubusercontent.com/nidorx/matcaps/master/256/DBD8C9_948E82_ADA69A_B5B0A3.png'
+    )
+  }),
+  // --- Tambahan: PHYSICAL MATERIAL (paling realistis) ---
+  new THREE.MeshPhysicalMaterial({
+    color: 0x88ccff,
+    metalness: 0.9,
+    roughness: 0.2,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.1,
+    transmission: 0.5,  // efek transparan
+    ior: 1.45,          // indeks bias
+    thickness: 0.5      // ketebalan untuk efek refraksi
+  })
 ];
 
-// Generate
-let index = 0;
+// --- GENERATE MESHES ---
 for (let i = 0; i < geometries.length; i++) {
   for (let j = 0; j < materials.length; j++) {
     const mesh = new THREE.Mesh(geometries[i], materials[j]);
-    mesh.position.x = (j - materials.length / 2) * 2;
-    mesh.position.z = (i - geometries.length / 2) * 2;
+    mesh.position.x = (j - materials.length / 2) * 2.2;
+    mesh.position.z = (i - geometries.length / 2) * 2.2;
     mesh.position.y = 0.5;
     scene.add(mesh);
   }
 }
 
-// Line
+// --- LINE ---
 const points = [
   new THREE.Vector3(-5, 1, -5),
   new THREE.Vector3(-2, 2, -3),
@@ -83,7 +95,7 @@ const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffff00, linewidth: 2
 const line = new THREE.Line(lineGeometry, lineMaterial);
 scene.add(line);
 
-
+// --- ANIMATE ---
 function animate() {
   scene.traverse(obj => {
     if (obj.isMesh && obj !== ground) {
@@ -91,12 +103,12 @@ function animate() {
       obj.rotation.y += 0.01;
     }
   });
-
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
 animate();
 
+// --- RESIZE ---
 window.addEventListener('resize', () => {
   width = window.innerWidth;
   height = window.innerHeight;
