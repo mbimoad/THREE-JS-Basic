@@ -74,19 +74,12 @@ modeload.load(modelurl.href, function(gltf) {
         }
     })
 
-    
-
-
-
-
-
     // Load All
     // gltf.animations.forEach(item => {
     //     const action = mixer.clipAction(item);
     //     action.play();
     // })
 
-    
 
     // Get All Object
     gltf.scene.traverse(function(obj) {
