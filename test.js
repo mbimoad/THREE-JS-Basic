@@ -1,156 +1,131 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three'; 
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-const scene = new THREE.Scene();
-
-const camera = new THREE.PerspectiveCamera(
-  50,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
-camera.position.set(5, 3, 4);
+const scenes = new THREE.Scene(); 
+const widths = window.innerWidth; 
+const height = window.innerHeight; 
+const aspect = widths/height; 
+const camera = new THREE.PerspectiveCamera(10, aspect, 0.1, 1000); 
+camera.position.set(30, 30, 30); 
 camera.lookAt(0, 0, 0);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+const renderer = new THREE.WebGLRenderer(); 
+renderer.setSize(widths, height); 
+renderer.setClearColor(0x333333); 
+document.body.appendChild(renderer.domElement); 
+const orbit = new OrbitControls(camera, renderer.domElement); 
+orbit.update(); 
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.update();
-
-const planeWidth = 2;
-const planeHeight = 2;
-const widthSeg = 3;
-const heightSeg = 2;
-
-const planeMaterial = new THREE.MeshBasicMaterial({
-  color: 0xff0000,
-  side: THREE.DoubleSide,
-  wireframe: true,
-});
-
-const plane = new THREE.Mesh(
-  new THREE.PlaneGeometry(planeWidth, planeHeight, widthSeg, heightSeg),
-  planeMaterial
-);
-plane.rotation.x = -Math.PI / 2;
-plane.position.set(2, 0, -2);
-scene.add(plane);
-
-// === Buat cell collider (hoverBoxes) ===
-const cellWidth = planeWidth / widthSeg;
-const cellHeight = planeHeight / heightSeg;
-const boxHeight = 0.3;
-
-const hoverBoxes = [];
-const cellStackCount = {}; // key: cell-i-j, value: count (0–3)
-
-for (let i = 0; i < widthSeg; i++) {
-  for (let j = 0; j < heightSeg; j++) {
-    const boxGeo = new THREE.BoxGeometry(cellWidth, 0.01, cellHeight);
-    const boxMat = new THREE.MeshBasicMaterial({
-      color: Math.floor(Math.random() * 0xFFFFFF),
-      transparent: true,
-      opacity: 0.0, // invisible
-    });
-    const box = new THREE.Mesh(boxGeo, boxMat);
-
-    const x = -planeWidth / 2 + cellWidth / 2 + i * cellWidth + plane.position.x;
-    const z = -planeHeight / 2 + cellHeight / 2 + j * cellHeight + plane.position.z;
-
-    box.position.set(x, 0.01, z);
-    const cellName = `cell-${i}-${j}`;
-    box.name = cellName;
-
-    cellStackCount[cellName] = 0; // init
-
-    scene.add(box);
-    hoverBoxes.push(box);
-  }
+// Nomral Style
+let datas = []; 
+const createNormalBox = (positionY, color) => {
+    const box = new THREE.Mesh(
+        new THREE.BoxGeometry(2,2,2), 
+        new THREE.MeshBasicMaterial({color: color})
+    )
+    box.position.y = positionY; 
+    datas.push(box); 
+    return box;
 }
+const box1 = createNormalBox(0, 0xFF00FF); 
+const box2 = createNormalBox(2, 0xFF0000); 
+const box3 = createNormalBox(4, 0x0000FF); 
+scenes.add(box1);
+
+// Barcode style
+async function createBarcode() {
+    const warna  = "#D2B48C"; 
+    const canvas = document.createElement('canvas'); 
+    canvas.width = 512; 
+    canvas.height = 512; 
+    const ctx = canvas.getContext('2d'); 
+    ctx.fillStyle = warna; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height); 
+    ctx.fillStyle = 'black'; 
+    ctx.font = '40px Arial'; 
+    ctx.textAlign = 'center'; 
+    ctx.fillText('Kardus', canvas.width/2, 100); 
+
+    const barcodeWidth = 300; 
+    const barcodeHeigh = 150; 
+    const barcodeImage = await new Promise(resolve => {
+        const image = new Image(); 
+        image.crossOrigin = 'anonymous'; 
+        image.src = './img/barcode.gif'; 
+        image.onload = () => resolve(image); 
+    })
+    ctx.drawImage(barcodeImage, (canvas.width-barcodeWidth)/2, 150, barcodeWidth, barcodeHeigh);
+    return {canvas, warna}; 
+}
+
+const barcode  = await createBarcode(); 
+const brown    = new THREE.MeshBasicMaterial({color: barcode.warna}); 
+const front    = new THREE.MeshBasicMaterial({map: new THREE.CanvasTexture(barcode.canvas)}); 
+const material = [brown, brown, brown, front, front, brown]; 
+box1.material   = material; // ubah box material ke material
+
+window.addEventListener('keypress', function(e) {
+    let gap = 3;
+    if(e.key == 'Enter') createNormalBox(datas.length * gap); 
+})
+
+// Group 
+const model = new THREE.Group(); 
+model.add(box2);
+model.add(box3);
+scenes.add(model); 
+
 
 // Raycaster & mouse
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-const stackedBoxes = []; // Menyimpan semua box yang ditambahkan
-let spinningBox = null; // Box yang sedang diputar
+let isBlinking = false;
+let blinkInterval = null;
 
-function onClick(event) {
-    // tolong reset semua rotasi box dan animasinya
-    stackedBoxes.forEach(box => {
-        box.rotation.set(0, 0, 0); // Reset rotasi ke awal
-      });
-      spinningBox = null;
-      
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  
-    raycaster.setFromCamera(mouse, camera);
-  
-    const intersects = raycaster.intersectObjects(scene.children); // ← semua objek di scene
-  
-    if (intersects.length > 0) {
-      const clickedObject = intersects[0].object;
-  
-      // === Cek kalau yang diklik adalah box stack ===
-      if (stackedBoxes.includes(clickedObject)) {
-        // Ubah warna random
-        clickedObject.material.color.set(Math.random() * 0xffffff);
-  
-        // Putar box (set sebagai spinningBox)
-        spinningBox = clickedObject;
-  
-        // Alert atau console log
-        alert("Box clicked!");
-  
-        return; // jangan lanjut ke logic cell
-      }
-  
-      // === Cek kalau yang diklik adalah hoverBox/cell ===
-      if (hoverBoxes.includes(clickedObject)) {
-        const cellName = clickedObject.name;
-        const stack = cellStackCount[cellName];
-  
-        if (stack < 3) {
-          const newBox = new THREE.Mesh(
-            new THREE.BoxGeometry(cellWidth * 0.8, boxHeight, cellHeight * 0.8),
-            new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff })
-          );
-  
-          newBox.position.set(
-            clickedObject.position.x,
-            (boxHeight / 2) + (stack * boxHeight),
-            clickedObject.position.z
-          );
-  
-          scene.add(newBox);
-          stackedBoxes.push(newBox); // Tambahkan ke daftar
-          cellStackCount[cellName]++;
-        } else {
-          console.log(`Max stack reached for ${cellName}`);
-        }
-      }
-    }
-  }
-  
-window.addEventListener('click', onClick);
-
-function animate() {
-  if (spinningBox) {
-     spinningBox.rotation.y += 0.05;
-  }
-
-  requestAnimationFrame(animate);
-  controls.update();
-  renderer.render(scene, camera);
+// === Blink logic (warna berganti) ===
+function startBlink() {
+  if (isBlinking) return;
+  isBlinking = true;
+  blinkInterval = setInterval(() => {
+    box2.material.color.set(Math.random() * 0xffffff);
+  }, 150);
+}
+function stopBlink() {
+  isBlinking = false;
+  clearInterval(blinkInterval);
+  box2.material.color.set(0x00aaff);
 }
 
-animate();
+// === Event listeners ===
+window.addEventListener('mousemove', function(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObject(box2);
+  
+  if (intersects.length > 0 && !isBlinking) {
+    startBlink();
+  } else if (intersects.length === 0 && isBlinking) {
+    stopBlink();
+  }
+});
+window.addEventListener('click', function(event) {
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObject(box2);
+  if (intersects.length > 0) {
+    startBlink();
+  }
+});
 
-// Resize handler
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+function animate() {
+    model.rotateY(0.04);
+    box1.rotateY(-0.04);
+    renderer.render(scenes, camera);
+}
+renderer.setAnimationLoop(animate);
+
+window.addEventListener('resize', function(e) {
+    camera.aspect = aspect; 
+    camera.updateProjectionMatrix(); 
+    renderer.setSize(widths, height); 
 });

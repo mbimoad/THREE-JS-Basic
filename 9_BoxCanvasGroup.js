@@ -64,7 +64,6 @@ const front    = new THREE.MeshBasicMaterial({map: new THREE.CanvasTexture(barco
 const material = [brown, brown, brown, front, front, brown]; 
 box1.material   = material; // ubah box material ke material
 
-
 window.addEventListener('keypress', function(e) {
     let gap = 3;
     if(e.key == 'Enter') createNormalBox(datas.length * gap); 
@@ -75,6 +74,48 @@ const model = new THREE.Group();
 model.add(box2);
 model.add(box3);
 scenes.add(model); 
+
+
+// Raycaster & mouse
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let isBlinking = false;
+let blinkInterval = null;
+
+// === Blink logic (warna berganti) ===
+function startBlink() {
+  if (isBlinking) return;
+  isBlinking = true;
+  blinkInterval = setInterval(() => {
+    box2.material.color.set(Math.random() * 0xffffff);
+  }, 150);
+}
+function stopBlink() {
+  isBlinking = false;
+  clearInterval(blinkInterval);
+  box2.material.color.set(0x00aaff);
+}
+
+// === Event listeners ===
+window.addEventListener('mousemove', function(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObject(box2);
+  
+  if (intersects.length > 0 && !isBlinking) {
+    startBlink();
+  } else if (intersects.length === 0 && isBlinking) {
+    stopBlink();
+  }
+});
+window.addEventListener('click', function(event) {
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObject(box2);
+  if (intersects.length > 0) {
+    startBlink();
+  }
+});
 
 function animate() {
     model.rotateY(0.04);
@@ -87,4 +128,4 @@ window.addEventListener('resize', function(e) {
     camera.aspect = aspect; 
     camera.updateProjectionMatrix(); 
     renderer.setSize(widths, height); 
-})
+});
