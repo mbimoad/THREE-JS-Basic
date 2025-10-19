@@ -19,6 +19,7 @@ camera.lookAt(0,0,0);
 
 // Canvas
 const renderer = new THREE.WebGLRenderer(); 
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(widths, height); 
 document.body.appendChild(renderer.domElement);
 

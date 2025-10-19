@@ -12,11 +12,12 @@ camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer(); 
 renderer.setSize(widths,height); 
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setClearColor(0x333333);
 document.body.appendChild(renderer.domElement); 
 
 const orbit = new OrbitControls(camera, renderer.domElement); 
-const light = new THREE.AmbientLight(0xCCCCCC, 4); 
+const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
 orbit.update(); 
 light.position.y = 10;
 
@@ -40,7 +41,7 @@ sidewall.position.y = 1.5;
 // box
 const box = new THREE.Mesh(
     new THREE.BoxGeometry(1,1,1), 
-    new THREE.MeshStandardMaterial(), 
+    new THREE.MeshStandardMaterial({ color: 0x00ff88, roughness: 0.5, metalness: 0.3 })
 ); 
 box.position.y = 0.5;
 
@@ -93,3 +94,30 @@ window.addEventListener('resize', function(e) {
     camera.updateProjectionMatrix(); 
     renderer.setSize(widths, height); 
 })
+
+// === Tombol toggle Fog ===
+// fog = efek kabut
+let fogEnabled = true;
+scenes.background = new THREE.Color(0x87ceeb); // langit biru
+scenes.fog = new THREE.Fog(0x87ceeb, 15, 60);  // mulai jarak 15, hilang di 60
+
+
+const btn = document.createElement('button');
+btn.textContent = 'Toggle Fog (ON)';
+Object.assign(btn.style, {
+  position: 'absolute',
+  top: '10px',
+  left: '10px',
+  padding: '8px 12px',
+  background: 'rgba(255,255,255,0.8)',
+  border: 'none',
+  borderRadius: '8px',
+  cursor: 'pointer'
+});
+document.body.appendChild(btn);
+
+btn.onclick = () => {
+  fogEnabled = !fogEnabled;
+  scenes.fog = fogEnabled ? new THREE.Fog(0x87ceeb, 15, 60) : null;
+  btn.textContent = fogEnabled ? 'Toggle Fog (ON)' : 'Toggle Fog (OFF)';
+};
