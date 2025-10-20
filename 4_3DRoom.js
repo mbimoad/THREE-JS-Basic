@@ -45,19 +45,66 @@ const box = new THREE.Mesh(
 ); 
 box.position.y = 0.5;
 
-// Grouping into 1 Mesh 
-const room = new THREE.Group(); 
+// === Membuat Group ===
+const room = new THREE.Group();
+room.name = 'roomGroup'; // nama unik untuk identifikasi
+
+// === Menambahkan object ke dalam group ===
 room.add(ground);
 room.add(backwall);
 room.add(sidewall);
 room.add(box);
-room.position.y = 10;
-// Instead of this
-// scenes.add(ground, backwall, sidewall, box); 
-// use this 
-scenes.add(room, light)
-room.traverse(item => console.log(item)) // Melihat isi nya
 
+// === Atribut dasar (transformasi) ===
+room.position.set(0, 10, 0);   // geser seluruh isi group ke atas
+room.rotation.set(0, 0.5, 0);  // rotasi seluruh group di sumbu Y
+room.scale.set(1, 1, 1);       // skala 1 artinya tidak berubah
+
+// === Atribut tambahan ===
+room.visible = true;           // tampilkan / sembunyikan group
+room.userData = { 
+  type: 'room', 
+  info: 'Group dari beberapa mesh', 
+  createdAt: new Date().toLocaleString() 
+};
+room.castShadow = true;        // child bisa punya shadow
+room.receiveShadow = true;
+
+// === Tambahkan ke scene ===
+scene.add(room, light);
+
+// === Melihat isi group ===
+console.log('Isi group:');
+room.traverse((item) => {
+  console.log(item.name || item.type);
+});
+
+// === Update atribut ===
+room.position.y = 5;        // pindahkan ke posisi baru
+room.rotation.y += 0.3;     // putar seluruh group
+room.scale.set(1.2, 1.2, 1.2); // ubah skala seluruh isi group
+room.userData.info = 'Posisi dan skala sudah diubah';
+
+// === Contoh remove satu object dari group ===
+room.remove(box); // hapus 1 objek (child)
+
+// === Contoh remove berdasarkan nama ===
+const target = room.getObjectByName('sidewall');
+if (target) {
+  room.remove(target);
+}
+
+// === Contoh clear semua isi group ===
+room.traverse(obj => {
+  if (obj.isMesh) {
+    obj.geometry.dispose();
+    obj.material.dispose();
+  }
+});
+room.clear(); // hapus semua child di group (kosong)
+
+// === Debug setelah di-clear ===
+console.log('Jumlah child setelah clear:', room.children.length);
 
 
 // By model 

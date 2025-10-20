@@ -2,20 +2,20 @@
 import * as THREE from 'three'; 
 import gsap from 'gsap';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import stars from '../solarsystem/stars.jpg';
-import sun from '../solarsystem/sun.jpg';
-import earth from '../solarsystem/earth.jpg';
-import saturn from '../solarsystem/saturn.jpg';
-import saturnring from '../solarsystem/saturn ring.png';
+import stars from './solarsystem/stars.jpg';
+import sun from './solarsystem/sun.jpg';
+import earth from './solarsystem/earth.jpg';
+import saturn from './solarsystem/saturn.jpg';
+import saturnring from './solarsystem/saturn ring.png';
 
 // Header
 const widths = window.innerWidth; 
 const height = window.innerHeight; 
-const aspect = widths/height;
+const aspect = widths / height;
 const scenes = new THREE.Scene(); 
 const camera = new THREE.PerspectiveCamera(20, aspect, .1, 1000);
 camera.position.set(-90, 140, 140);
-camera.lookAt(0,0,0);
+camera.lookAt(0, 0, 0);
 
 // Canvas
 const renderer = new THREE.WebGLRenderer(); 
@@ -32,80 +32,75 @@ scenes.add(grids);
 // Texture
 const cubeText = new THREE.CubeTextureLoader();
 const loadText = new THREE.TextureLoader(); 
-scenes.background = cubeText.load([stars,stars,stars,stars,stars,stars]);
+scenes.background = cubeText.load([stars, stars, stars, stars, stars, stars]);
 
 const planet = (size, position, texture, ring) => {
-    const planeGeo = new THREE.SphereGeometry(size, 40, 40);
-    const planeMat = new THREE.MeshBasicMaterial({map: loadText.load(texture)});
-    const planeMes = new THREE.Mesh(planeGeo, planeMat);
-    const plane3DS = new THREE.Object3D(); 
+    const geo = new THREE.SphereGeometry(size, 40, 40);
+    const mat = new THREE.MeshBasicMaterial({ map: loadText.load(texture) });
+    const mesh = new THREE.Mesh(geo, mat);
+    const obj3D = new THREE.Object3D();
 
-    if(ring.texture) {
-        const ringGeo = new THREE.RingGeometry(ring.inrad, ring.ourad, 20); 
+    if (ring.texture) {
+        const ringGeo = new THREE.RingGeometry(ring.inrad, ring.ourad, 20);
         const ringMat = new THREE.MeshBasicMaterial({
-            map: ring.texture, 
+            map: ring.texture,
             side: THREE.DoubleSide,
         });
-        const ringMes = new THREE.Mesh(ringGeo, ringMat);
-        ringMes.position.x = position;
-        ringMes.rotation.x = -0.5 * Math.PI;
-        plane3DS.add(ringMes);
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.position.x = position;
+        ringMesh.rotation.x = -Math.PI / 2;
+        obj3D.add(ringMesh);
     }
 
-    plane3DS.add(planeMes);
-    scenes.add(plane3DS);
-    planeMes.position.x = position;
+    obj3D.add(mesh);
+    scenes.add(obj3D);
+    mesh.position.x = position;
 
-    return {
-        planeMes,
-        plane3DS,
-    }
-}
+    return { mesh, obj3D };
+};
 
 const vsuns   = planet(10, 0, sun, false);
 const vearth  = planet(3, 20, earth, false);
 const vsaturn = planet(6, 50, saturn, {
-    inrad: 5, 
-    ourad: 15, 
+    inrad: 5,
+    ourad: 15,
     texture: loadText.load(saturnring)
 });
 
-// Click event 
-let position = true; 
-const TIMELINE = gsap.timeline(); 
-const lookAtCenter = () => camera.lookAt(0, 0, 0);
-const positions = [
-    { z: 14 },
-    { y: 10 },
-    { x: 10, y: 100, z: 100 }
-];
-function moveCamera(x, y, z, d) {
-    gsap.to(camera.position, {x,y,z, duration: d});
-}
-window.addEventListener('mousedown', function(e) {
+// ----------------------------
+// GSAP PALING SEDERHANA
+const startPos = camera.position.clone();
+const tween = gsap.to(camera.position, {
+    x: 30,
+    y: 30,
+    z: 30,
+    duration: 2,
+    paused: true,
+});
+window.addEventListener('mousedown', (e) => {
     if (e.button === 0) {
-        positions.forEach(pos => {
-            TIMELINE.to(camera.position, {
-                ...pos,
-                duration: 1.5,
-                onUpdate: lookAtCenter
-            });
+        tween.play();
+    } 
+    else if (e.button === 2) {
+        gsap.to(camera.position, {
+            x: startPos.x,
+            y: startPos.y,
+            z: startPos.z,
+            duration: 1
         });
-    } else if (e.button === 2) {
-        if(position) moveCamera(30, 20, -50, 3);
-        else moveCamera(0.5, 0.8, 10, 3);
-        position = !position; 
     }
-})
+});
 
+// Animasi planet
 function animate() {
-    vsaturn.plane3DS.rotateY(0.001);
-    vsaturn.plane3DS.rotateY(0.001);
+    vsaturn.obj3D.rotation.y += 0.002;
     renderer.render(scenes, camera);
 }
 renderer.setAnimationLoop(animate);
-window.addEventListener('resize', function() {
+
+// Resize
+window.addEventListener('resize', () => {
     camera.aspect = aspect;
     camera.updateProjectionMatrix(); 
     renderer.setSize(widths, height);
-})
+});

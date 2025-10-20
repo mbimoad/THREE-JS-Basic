@@ -1,118 +1,106 @@
-import * as THREE from 'three';
+// Import
+import * as THREE from 'three'; 
+import gsap from 'gsap';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import stars from './solarsystem/stars.jpg';
+import sun from './solarsystem/sun.jpg';
+import earth from './solarsystem/earth.jpg';
+import saturn from './solarsystem/saturn.jpg';
+import saturnring from './solarsystem/saturn ring.png';
 
-// --- BASIC SETUP ---
-let width = window.innerWidth;
-let height = window.innerHeight;
-let aspect = width / height;
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x202020);
-const camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
-camera.position.set(0, 5, 15);
+// Header
+const widths = window.innerWidth; 
+const height = window.innerHeight; 
+const aspect = widths / height;
+const scenes = new THREE.Scene(); 
+const camera = new THREE.PerspectiveCamera(20, aspect, .1, 1000);
+camera.position.set(-90, 140, 140);
 camera.lookAt(0, 0, 0);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(width, height);
+// Canvas
+const renderer = new THREE.WebGLRenderer(); 
 renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(widths, height); 
 document.body.appendChild(renderer.domElement);
 
-// --- SUPPORT LIGHT & CONTROL ---
+// Helper
+const grids = new THREE.GridHelper(30);
 const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.update();
-const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-dirLight.position.set(5, 10, 7);
-scene.add(ambient, dirLight);
+scenes.add(grids);
 
-// --- GROUND ---
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(20, 20),
-  new THREE.MeshPhongMaterial({ color: 0x333333, side: THREE.DoubleSide })
-);
-ground.rotation.x = -Math.PI / 2;
-scene.add(ground);
+// Texture
+const cubeText = new THREE.CubeTextureLoader();
+const loadText = new THREE.TextureLoader(); 
+scenes.background = cubeText.load([stars, stars, stars, stars, stars, stars]);
 
-// --- GEOMETRIES ---
-const geometries = [
-  new THREE.BoxGeometry(1, 1, 1),             // 1. Kubus
-  new THREE.SphereGeometry(0.6, 32, 32),      // 2. Bola
-  new THREE.ConeGeometry(0.6, 1, 32),         // 3. Kerucut
-  new THREE.CylinderGeometry(0.5, 0.5, 1, 32),// 4. Silinder
-  new THREE.TorusGeometry(0.5, 0.2, 16, 100), // 5. Donat
-  new THREE.TorusKnotGeometry(0.4, 0.15, 100, 16), // 6. Donat simpul
-  new THREE.DodecahedronGeometry(0.6),        // 7. 12 sisi
-  new THREE.TetrahedronGeometry(0.7),         // 8. Piramid 4 sisi
-  new THREE.PlaneGeometry(1, 1)               // 9. Bidang datar
-];
+const planet = (size, position, texture, ring) => {
+    const geo = new THREE.SphereGeometry(size, 40, 40);
+    const mat = new THREE.MeshBasicMaterial({ map: loadText.load(texture) });
+    const mesh = new THREE.Mesh(geo, mat);
+    const obj3D = new THREE.Object3D();
 
-// --- MATERIALS ---
-const materials = [
-  new THREE.MeshBasicMaterial({ color: 0xff4444 }),  // Tanpa cahaya
-  new THREE.MeshNormalMaterial(),                    // Berdasarkan normal
-  new THREE.MeshLambertMaterial({ color: 0x00ff88 }),// Lembut
-  new THREE.MeshPhongMaterial({ color: 0x4488ff, shininess: 80 }), // Mengkilap
-  new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.6, roughness: 0.3 }), // Realistik
-  new THREE.MeshToonMaterial({ color: 0x66ccff }),   // Kartun-style
-  new THREE.MeshMatcapMaterial({
-    matcap: new THREE.TextureLoader().load(
-      'https://raw.githubusercontent.com/nidorx/matcaps/master/256/DBD8C9_948E82_ADA69A_B5B0A3.png'
-    )
-  }),
-  // --- Tambahan: PHYSICAL MATERIAL (paling realistis) ---
-  new THREE.MeshPhysicalMaterial({
-    color: 0x88ccff,
-    metalness: 0.9,
-    roughness: 0.2,
-    clearcoat: 1.0,
-    clearcoatRoughness: 0.1,
-    transmission: 0.5,  // efek transparan
-    ior: 1.45,          // indeks bias
-    thickness: 0.5      // ketebalan untuk efek refraksi
-  })
-];
-
-// --- GENERATE MESHES ---
-for (let i = 0; i < geometries.length; i++) {
-  for (let j = 0; j < materials.length; j++) {
-    const mesh = new THREE.Mesh(geometries[i], materials[j]);
-    mesh.position.x = (j - materials.length / 2) * 2.2;
-    mesh.position.z = (i - geometries.length / 2) * 2.2;
-    mesh.position.y = 0.5;
-    scene.add(mesh);
-  }
-}
-
-// --- LINE ---
-const points = [
-  new THREE.Vector3(-5, 1, -5),
-  new THREE.Vector3(-2, 2, -3),
-  new THREE.Vector3(0, 1, 0),
-  new THREE.Vector3(2, 2, 3),
-  new THREE.Vector3(5, 1, 5)
-];
-const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffff00, linewidth: 2 });
-const line = new THREE.Line(lineGeometry, lineMaterial);
-scene.add(line);
-
-// --- ANIMATE ---
-function animate() {
-  scene.traverse(obj => {
-    if (obj.isMesh && obj !== ground) {
-      obj.rotation.x += 0.01;
-      obj.rotation.y += 0.01;
+    if (ring.texture) {
+        const ringGeo = new THREE.RingGeometry(ring.inrad, ring.ourad, 20);
+        const ringMat = new THREE.MeshBasicMaterial({
+            map: ring.texture,
+            side: THREE.DoubleSide,
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.position.x = position;
+        ringMesh.rotation.x = -Math.PI / 2;
+        obj3D.add(ringMesh);
     }
-  });
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
-}
-animate();
 
-// --- RESIZE ---
+    obj3D.add(mesh);
+    scenes.add(obj3D);
+    mesh.position.x = position;
+
+    return { mesh, obj3D };
+};
+
+const vsuns   = planet(10, 0, sun, false);
+const vearth  = planet(3, 20, earth, false);
+const vsaturn = planet(6, 50, saturn, {
+    inrad: 5,
+    ourad: 15,
+    texture: loadText.load(saturnring)
+});
+
+// ----------------------------
+// GSAP PALING SEDERHANA
+const startPos = camera.position.clone();
+const tween = gsap.to(camera.position, {
+    x: 30,
+    y: 30,
+    z: 30,
+    duration: 2,
+    paused: true,
+});
+window.addEventListener('mousedown', (e) => {
+    if (e.button === 0) {
+        tween.play();
+    } 
+    else if (e.button === 2) {
+        gsap.to(camera.position, {
+            x: startPos.x,
+            y: startPos.y,
+            z: startPos.z,
+            duration: 1
+        });
+    }
+});
+
+// Animasi planet
+function animate() {
+    vsaturn.obj3D.rotation.y += 0.002;
+    renderer.render(scenes, camera);
+}
+renderer.setAnimationLoop(animate);
+
+// Resize
 window.addEventListener('resize', () => {
-  width = window.innerWidth;
-  height = window.innerHeight;
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  renderer.setSize(width, height);
+    camera.aspect = aspect;
+    camera.updateProjectionMatrix(); 
+    renderer.setSize(widths, height);
 });

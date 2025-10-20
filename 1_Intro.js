@@ -73,12 +73,40 @@ console.log("🧩 Position array:", boxTextMes.geometry.attributes.position.arra
 console.log("🔢 Vertex count:", boxTextMes.geometry.attributes.position.count);
 
 
-boxTextMes.userData = { info: 'Data sederhana' };
-boxTextMes.material.color.set(0xff00ff); // warna ungu
-boxTextMes.material.map = null; // hapus texture kalau ada
-boxTextMes.position.set(10,10,-10);
-boxTextMes.material.map = loadTexture.load(nebula);
+// === 1️⃣ Identitas & Data ===
 boxTextMes.name = 'bimo';
+boxTextMes.userData = {
+  info: 'Data sederhana',
+  author: 'Bimo',
+  health: 100,
+  isEnemy: false,
+};
+
+// === 2️⃣ Posisi, Rotasi, Skala (pakai angka biasa) ===
+boxTextMes.position.set(10, 10, -10);
+boxTextMes.rotation.set(0.5, 1, 0); // rotasi sederhana (radian, tapi angkanya mudah)
+boxTextMes.scale.set(1.5, 1.5, 1.5);
+
+// === 3️⃣ Material & Tekstur ===
+const loadTexture = new THREE.TextureLoader();
+boxTextMes.material.map = loadTexture.load(nebula); // pakai tekstur nebula
+boxTextMes.material.color.set(0xff00ff); // tetap ungu
+boxTextMes.material.emissive.set(0x222222);
+boxTextMes.material.needsUpdate = true;
+
+// === 4️⃣ Visibility & Shadows ===
+boxTextMes.visible = true;
+boxTextMes.castShadow = true;
+boxTextMes.receiveShadow = true;
+
+// === 5️⃣ Transformasi Tambahan ===
+boxTextMes.rotateY(0.5);   // rotasi tambahan di sumbu Y
+boxTextMes.translateZ(2);  // geser 2 unit ke arah depan lokal
+
+// === 6️⃣ Layer & Helper ===
+boxTextMes.layers.enable(0); // tetap di layer utama
+const helper = new THREE.BoxHelper(boxTextMes, 0x00ff00);
+scene.add(helper);
 const pos = boxTextMes.geometry.attributes.position;
 pos.setXYZ(0, 1, 1, 1); pos.needsUpdate = true; // ubah vertex 0
 scenes.add(boxTextMes)
