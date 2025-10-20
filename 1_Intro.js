@@ -1,8 +1,5 @@
 import * as THREE from 'three'; 
 import * as dat from 'dat.gui';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import nebula from './img/nebula.jpg';
 import stars from './img/stars.jpg';
 
@@ -22,7 +19,6 @@ renderer.shadowMap.enabled = true;
 renderer.setSize(widths, height); 
 document.body.appendChild(renderer.domElement);
 
-
 // Texture
 const cubeTexture = new THREE.CubeTextureLoader(); 
 scenes.background = cubeTexture.load([
@@ -33,7 +29,6 @@ scenes.background = cubeTexture.load([
     stars,
     stars,
 ]);
-
 
 const loadTexture = new THREE.TextureLoader(); 
 const multi = [
@@ -127,8 +122,6 @@ const pointing = () => {
         if(active.name == 'bimo') active.rotation.x += 0.1;
     }
 }
-
-
 
 function animate() {
     pointing(); 
