@@ -125,6 +125,8 @@ const hdrurl   = new URL("../img/kantor.hdr", import.meta.url);
 const gltfload = new GLTFLoader(loading); 
 const rgbeload = new RGBELoader();
 
+
+
 rgbeload.load(hdrurl, item => {
     item.mapping = THREE.EquirectangularReflectionMapping;
     scenes.background = item; 

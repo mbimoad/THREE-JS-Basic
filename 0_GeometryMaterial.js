@@ -32,6 +32,31 @@ const ground = new THREE.Mesh(
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
+
+// --- LIGHT --- 
+const lights = [
+  new THREE.AmbientLight(0xffffff, 0.3),
+  new THREE.DirectionalLight(0xffffff, 0.5),
+  new THREE.PointLight(0xffaa00, 0.6),
+  new THREE.SpotLight(0x00aaff, 0.5),
+  new THREE.HemisphereLight(0xaaaaff, 0x444400, 0.6),
+];
+lights.forEach(light => scene.add(light));
+
+// --- HELPER --- 
+const helpers = [
+  new THREE.AxesHelper(5),
+  new THREE.GridHelper(20, 20),
+  new THREE.DirectionalLightHelper(new THREE.DirectionalLight(), 2),
+  new THREE.PointLightHelper(new THREE.PointLight(0xff0000, 1), 1),
+  new THREE.SpotLightHelper(new THREE.SpotLight(0xffffff, 1)),
+  new THREE.HemisphereLightHelper(new THREE.HemisphereLight(0x00ffff, 0xff00ff), 1),
+  new THREE.CameraHelper(new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100))
+];
+helpers.forEach(helper => scene.add(helper));
+
+
+
 // --- GEOMETRIES ---
 const geometries = [
   new THREE.BoxGeometry(1, 1, 1),             // 1. Kubus
