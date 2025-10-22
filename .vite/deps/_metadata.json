@@ -2,24 +2,36 @@
   "hash": "e3bc72d7",
   "configHash": "d92cdb84",
   "lockfileHash": "f84856cf",
-  "browserHash": "c5c19af7",
+  "browserHash": "764ddea2",
   "optimized": {
     "three": {
       "src": "../../node_modules/three/build/three.module.js",
       "file": "three.js",
-      "fileHash": "a999e8af",
+      "fileHash": "7833066a",
       "needsInterop": false
     },
     "three/examples/jsm/controls/OrbitControls": {
       "src": "../../node_modules/three/examples/jsm/controls/OrbitControls.js",
       "file": "three_examples_jsm_controls_OrbitControls.js",
-      "fileHash": "241c062f",
+      "fileHash": "270275c7",
       "needsInterop": false
     },
     "three/examples/jsm/loaders/GLTFLoader": {
       "src": "../../node_modules/three/examples/jsm/loaders/GLTFLoader.js",
       "file": "three_examples_jsm_loaders_GLTFLoader.js",
-      "fileHash": "58ec8c0a",
+      "fileHash": "17aa79df",
+      "needsInterop": false
+    },
+    "three/examples/jsm/controls/TrackBallControls": {
+      "src": "../../node_modules/three/examples/jsm/controls/TrackBallControls.js",
+      "file": "three_examples_jsm_controls_TrackBallControls.js",
+      "fileHash": "1fb7fe30",
+      "needsInterop": false
+    },
+    "three/examples/jsm/controls/FirstPersonControls": {
+      "src": "../../node_modules/three/examples/jsm/controls/FirstPersonControls.js",
+      "file": "three_examples_jsm_controls_FirstPersonControls.js",
+      "fileHash": "71a3fe49",
       "needsInterop": false
     }
   },
