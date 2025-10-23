@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { TrackBallControls } from 'three/examples/jsm/controls/TrackBallControls';
+// import { TrackBallControls } from 'three/examples/jsm/controls/TrackBallControls';
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls';
 
 // --- BASIC SETUP ---
@@ -20,11 +20,11 @@ renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 // --- SUPPORT LIGHT & CONTROL ---
-const controls = new THREE.FirstPersonControls(cam, renderer.domElement);
-//const controls = new THREE.TrackBallControls(cam, renderer.domElement);
+const controls = new THREE.FirstPersonControls(camera, renderer.domElement);
+//const controls = new THREE.TrackBallControls(camera, renderer.domElement);
 //const controls = new OrbitControls(camera, renderer.domElement);
-firstperson.lockSpeed = 0.1;
-orbit.update();
+controls.lockSpeed = 0.1;
+controls.update();
 
 
 const ambient = new THREE.AmbientLight(0xffffff, 0.5);

@@ -48,53 +48,33 @@ box.position.y = 0.5;
 // === Membuat Group ===
 const room = new THREE.Group();
 room.name = 'roomGroup'; // nama unik untuk identifikasi
-
-// === Menambahkan object ke dalam group ===
 room.add(ground);
 room.add(backwall);
 room.add(sidewall);
 room.add(box);
-
-// === Atribut dasar (transformasi) ===
 room.position.set(0, 10, 0);   // geser seluruh isi group ke atas
-room.rotation.set(0, 0.5, 0);  // rotasi seluruh group di sumbu Y
 room.scale.set(1, 1, 1);       // skala 1 artinya tidak berubah
-
-// === Atribut tambahan ===
 room.visible = true;           // tampilkan / sembunyikan group
 room.userData = { 
-  type: 'room', 
-  info: 'Group dari beberapa mesh', 
+  infoku: 'room baru', 
   createdAt: new Date().toLocaleString() 
 };
 room.castShadow = true;        // child bisa punya shadow
 room.receiveShadow = true;
+scenes.add(room, light);
 
-// === Tambahkan ke scene ===
-scene.add(room, light);
-
-// === Melihat isi group ===
 console.log('Isi group:');
 room.traverse((item) => {
   console.log(item.name || item.type);
 });
 
-// === Update atribut ===
-room.position.y = 5;        // pindahkan ke posisi baru
-room.rotation.y += 0.3;     // putar seluruh group
-room.scale.set(1.2, 1.2, 1.2); // ubah skala seluruh isi group
-room.userData.info = 'Posisi dan skala sudah diubah';
-
 // === Contoh remove satu object dari group ===
-room.remove(box); // hapus 1 objek (child)
-
-// === Contoh remove berdasarkan nama ===
+room.remove(box); 
 const target = room.getObjectByName('sidewall');
 if (target) {
   room.remove(target);
 }
-
-// === Contoh clear semua isi group ===
+// Clear semua isi
 room.traverse(obj => {
   if (obj.isMesh) {
     obj.geometry.dispose();
@@ -102,10 +82,9 @@ room.traverse(obj => {
   }
 });
 room.clear(); // hapus semua child di group (kosong)
-
-// === Debug setelah di-clear ===
 console.log('Jumlah child setelah clear:', room.children.length);
 
+// Buatkan versi merge
 
 // By model 
 const modelurl = new URL('./gaming_room/scene.gltf', import.meta.url); 
