@@ -76,7 +76,7 @@ var OrbitControls = class extends EventDispatcher {
       scope.update();
       state = STATE.NONE;
     };
-    this.update = (function() {
+    this.update = function() {
       const offset = new Vector3();
       const quat = new Quaternion().setFromUnitVectors(object.up, new Vector3(0, 1, 0));
       const quatInverse = quat.clone().invert();
@@ -142,7 +142,7 @@ var OrbitControls = class extends EventDispatcher {
         }
         return false;
       };
-    })();
+    }();
     this.dispose = function() {
       scope.domElement.removeEventListener("contextmenu", onContextMenu);
       scope.domElement.removeEventListener("pointerdown", onPointerDown);
@@ -195,15 +195,15 @@ var OrbitControls = class extends EventDispatcher {
     function rotateUp(angle) {
       sphericalDelta.phi -= angle;
     }
-    const panLeft = (function() {
+    const panLeft = function() {
       const v = new Vector3();
       return function panLeft2(distance, objectMatrix) {
         v.setFromMatrixColumn(objectMatrix, 0);
         v.multiplyScalar(-distance);
         panOffset.add(v);
       };
-    })();
-    const panUp = (function() {
+    }();
+    const panUp = function() {
       const v = new Vector3();
       return function panUp2(distance, objectMatrix) {
         if (scope.screenSpacePanning === true) {
@@ -215,8 +215,8 @@ var OrbitControls = class extends EventDispatcher {
         v.multiplyScalar(distance);
         panOffset.add(v);
       };
-    })();
-    const pan = (function() {
+    }();
+    const pan = function() {
       const offset = new Vector3();
       return function pan2(deltaX, deltaY) {
         const element = scope.domElement;
@@ -235,7 +235,7 @@ var OrbitControls = class extends EventDispatcher {
           scope.enablePan = false;
         }
       };
-    })();
+    }();
     function dollyOut(dollyScale) {
       if (scope.object.isPerspectiveCamera) {
         scale /= dollyScale;

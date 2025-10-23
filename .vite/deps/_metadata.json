@@ -1,41 +1,92 @@
 {
-  "hash": "e3bc72d7",
-  "configHash": "d92cdb84",
+  "hash": "72b91ebd",
+  "configHash": "a2181de5",
   "lockfileHash": "f84856cf",
-  "browserHash": "764ddea2",
+  "browserHash": "01acf52d",
   "optimized": {
     "three": {
       "src": "../../node_modules/three/build/three.module.js",
       "file": "three.js",
-      "fileHash": "7833066a",
+      "fileHash": "0cee310c",
       "needsInterop": false
     },
     "three/examples/jsm/controls/OrbitControls": {
       "src": "../../node_modules/three/examples/jsm/controls/OrbitControls.js",
       "file": "three_examples_jsm_controls_OrbitControls.js",
-      "fileHash": "270275c7",
+      "fileHash": "ea745d9a",
       "needsInterop": false
     },
     "three/examples/jsm/loaders/GLTFLoader": {
       "src": "../../node_modules/three/examples/jsm/loaders/GLTFLoader.js",
       "file": "three_examples_jsm_loaders_GLTFLoader.js",
-      "fileHash": "17aa79df",
+      "fileHash": "c59d0d5a",
+      "needsInterop": false
+    },
+    "three/examples/jsm/utils/BufferGeometryUtils.js": {
+      "src": "../../node_modules/three/examples/jsm/utils/BufferGeometryUtils.js",
+      "file": "three_examples_jsm_utils_BufferGeometryUtils__js.js",
+      "fileHash": "e36a8e62",
+      "needsInterop": false
+    },
+    "three/examples/jsm/utils/BufferGeometryUtils": {
+      "src": "../../node_modules/three/examples/jsm/utils/BufferGeometryUtils.js",
+      "file": "three_examples_jsm_utils_BufferGeometryUtils.js",
+      "fileHash": "f25939ee",
       "needsInterop": false
     },
     "three/examples/jsm/controls/TrackBallControls": {
-      "src": "../../node_modules/three/examples/jsm/controls/TrackBallControls.js",
+      "src": "../../node_modules/three/examples/jsm/controls/TrackballControls.js",
       "file": "three_examples_jsm_controls_TrackBallControls.js",
-      "fileHash": "1fb7fe30",
+      "fileHash": "bcc2cb08",
       "needsInterop": false
     },
     "three/examples/jsm/controls/FirstPersonControls": {
       "src": "../../node_modules/three/examples/jsm/controls/FirstPersonControls.js",
       "file": "three_examples_jsm_controls_FirstPersonControls.js",
-      "fileHash": "71a3fe49",
+      "fileHash": "9db47843",
+      "needsInterop": false
+    },
+    "three/examples/jsm/controls/TrackballControls.js": {
+      "src": "../../node_modules/three/examples/jsm/controls/TrackballControls.js",
+      "file": "three_examples_jsm_controls_TrackballControls__js.js",
+      "fileHash": "de91bfa2",
+      "needsInterop": false
+    },
+    "gsap": {
+      "src": "../../node_modules/gsap/index.js",
+      "file": "gsap.js",
+      "fileHash": "b35d0762",
+      "needsInterop": false
+    },
+    "three/examples/jsm/geometries/TextGeometry.js": {
+      "src": "../../node_modules/three/examples/jsm/geometries/TextGeometry.js",
+      "file": "three_examples_jsm_geometries_TextGeometry__js.js",
+      "fileHash": "6dc17668",
+      "needsInterop": false
+    },
+    "three/examples/jsm/geometries/TextGeometry": {
+      "src": "../../node_modules/three/examples/jsm/geometries/TextGeometry.js",
+      "file": "three_examples_jsm_geometries_TextGeometry.js",
+      "fileHash": "4b266c39",
+      "needsInterop": false
+    },
+    "three/examples/jsm/loaders/FontLoader.js": {
+      "src": "../../node_modules/three/examples/jsm/loaders/FontLoader.js",
+      "file": "three_examples_jsm_loaders_FontLoader__js.js",
+      "fileHash": "40428a19",
       "needsInterop": false
     }
   },
   "chunks": {
+    "chunk-LGVTHKT2": {
+      "file": "chunk-LGVTHKT2.js"
+    },
+    "chunk-LIT2E6O2": {
+      "file": "chunk-LIT2E6O2.js"
+    },
+    "chunk-3FLPAEFI": {
+      "file": "chunk-3FLPAEFI.js"
+    },
     "chunk-S55EQA7O": {
       "file": "chunk-S55EQA7O.js"
     }

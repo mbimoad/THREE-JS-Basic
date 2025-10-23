@@ -2079,7 +2079,7 @@ var GLTFParser = class {
     const parser = this;
     const nodeDef = json.nodes[nodeIndex];
     const nodeName = nodeDef.name ? parser.createUniqueName(nodeDef.name) : "";
-    return (function() {
+    return function() {
       const pending = [];
       const meshPromise = parser._invokeOne(function(ext) {
         return ext.createNodeMesh && ext.createNodeMesh(nodeIndex);
@@ -2098,7 +2098,7 @@ var GLTFParser = class {
         pending.push(promise);
       });
       return Promise.all(pending);
-    })().then(function(objects) {
+    }().then(function(objects) {
       let node;
       if (nodeDef.isBone === true) {
         node = new Bone();

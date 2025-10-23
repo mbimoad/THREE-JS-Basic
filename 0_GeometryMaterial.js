@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-// import { TrackBallControls } from 'three/examples/jsm/controls/TrackBallControls';
+import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls';
 
 // --- BASIC SETUP ---
@@ -20,8 +20,8 @@ renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 // --- SUPPORT LIGHT & CONTROL ---
-const controls = new THREE.FirstPersonControls(camera, renderer.domElement);
-//const controls = new THREE.TrackBallControls(camera, renderer.domElement);
+// const controls = new FirstPersonControls(camera, renderer.domElement);
+const controls = new TrackballControls(camera, renderer.domElement);
 //const controls = new OrbitControls(camera, renderer.domElement);
 controls.lockSpeed = 0.1;
 controls.update();
@@ -87,9 +87,7 @@ const materials = [
   new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.6, roughness: 0.3 }), // Realistik
   new THREE.MeshToonMaterial({ color: 0x66ccff }),   // Kartun-style
   new THREE.MeshMatcapMaterial({
-    matcap: new THREE.TextureLoader().load(
-      'https://raw.githubusercontent.com/nidorx/matcaps/master/256/DBD8C9_948E82_ADA69A_B5B0A3.png'
-    )
+    matcap: new THREE.TextureLoader().load('./img/nebula.jpg')
   }),
   // --- Tambahan: PHYSICAL MATERIAL (paling realistis) ---
   new THREE.MeshPhysicalMaterial({
