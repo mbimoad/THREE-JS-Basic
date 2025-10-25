@@ -2,12 +2,12 @@
 import * as THREE from 'three'; 
 import gsap from 'gsap';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
 import stars from './solarsystem/stars.jpg';
 import sun from './solarsystem/sun.jpg';
 import earth from './solarsystem/earth.jpg';
 import saturn from './solarsystem/saturn.jpg';
 import saturnring from './solarsystem/saturn ring.png';
-
 // Header
 const widths = window.innerWidth; 
 const height = window.innerHeight; 
@@ -23,11 +23,61 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(widths, height); 
 document.body.appendChild(renderer.domElement);
 
+addEventListener('keydown', function(e) {
+  if(e.key == "q") {
+    if(sound1.isPlaying) {
+      sound1.pause();
+      sound2.pause(); 
+    } 
+    else {
+      sound1.play();
+      sound2.play(); 
+    } 
+  }
+})
+
+
 // Helper
 const grids = new THREE.GridHelper(30);
 const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.update();
 scenes.add(grids);
+
+// Create Particle Animation
+let positions = [];
+let velocities = [];
+let qt = 100;
+for (let i = 0; i < qt; i++) {
+  for (let j = 0; j < qt; j++) {
+    positions.push(i - qt / 2, 0, j - qt / 2);
+    velocities.push(0, Math.random() * 1, 0);
+  }
+}
+let gr = new THREE.BufferGeometry();
+gr.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+let pmat = new THREE.PointsMaterial({
+  size: 0.5,
+  color: 0xFFFFFF,
+  // map: new THREE.TextureLoader().load('path/to/texture.png') // kalau mau pakai texture
+});
+
+let partikel = new THREE.Points(gr, pmat);
+scenes.add(partikel);
+
+const animateParticle = () => {
+    const posAttr = gr.attributes.position.array;
+    for (let i = 0; i < posAttr.length; i += 3) {
+      posAttr[i] += velocities[i];     // x += vx
+      posAttr[i + 1] += velocities[i + 1]; // y += vy
+      posAttr[i + 2] += velocities[i + 2]; // z += vz
+      // kalau y lebih dari 51, reset ke 0
+      if (posAttr[i + 1] > 51) {
+        posAttr[i + 1] = 0;
+      }
+    }
+    gr.attributes.position.needsUpdate = true;
+}
+
 
 // Texture
 const cubeText = new THREE.CubeTextureLoader();
@@ -91,8 +141,47 @@ window.addEventListener('mousedown', (e) => {
     }
 });
 
+
+
+
+let soundListen = new THREE.AudioListener(); 
+camera.add(soundListen); 
+
+let sound1 = new THREE.Audio(soundListen); 
+let sound2 = new THREE.PositionalAudio(soundListen); 
+
+let soundLoader1 = new THREE.AudioLoader().load('dragonball.ogg', hasil => {
+  sound1.setBuffer(hasil); 
+  // sound1.play(); 
+})
+let soundLoader2 = new THREE.AudioLoader().load('dbs.ogg', hasil => {
+  sound2.setBuffer(hasil); 
+  sound2.setRefDistance(1);
+  // sound2.play(); 
+})
+vearth.mesh.add(sound2)
+
+const video = document.getElementById('video'); 
+video.src = "bardoc.webm"; 
+video.loop = true; 
+video.play(); 
+let videoTexture = new THREE.VideoTexture(video); 
+let cubeMesh     = new THREE.Mesh(
+  new THREE.BoxGeometry(5,5,5), 
+  new THREE.MeshBasicMaterial({
+    map: videoTexture
+  })
+)
+cubeMesh.position.y = 30;
+scenes.add(cubeMesh)
+
+
+
 // Animasi planet
+let clock = new THREE.Clock(); 
 function animate() {
+    orbit.update(clock.getDelta())
+    animateParticle(); 
     vsaturn.obj3D.rotation.y += 0.002;
     renderer.render(scenes, camera);
 }
