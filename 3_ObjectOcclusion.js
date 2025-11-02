@@ -1,30 +1,20 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 4, 14);
-
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+camera.position.set(0, 4, 14);
+camera.lookAt(0,0,0)
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0xFEFEFE);
+renderer.setPixelRatio(window.devicePixelRatio); 
 document.body.appendChild(renderer.domElement);
 
 const controls1 = new OrbitControls(camera, renderer.domElement);
-controls1.enableDamping = true;
-controls1.dampingFactor = 0.12;
-controls1.enableZoom = false;
-
-const controls2 = new TrackballControls(camera, renderer.domElement);
-controls2.noRotate = true;
-controls2.noPan = true;
-controls2.noZoom = false;
-controls2.zoomSpeed = 1.5;
-
-// Helpers
+controls1.update(); 
 scene.add(new THREE.GridHelper(12, 12));
 const dLight = new THREE.DirectionalLight(0xffffff, 1);
 dLight.position.set(0, 3, 3);
@@ -68,7 +58,6 @@ function loadModel({ path, scale, positionX, rotationY, animName }) {
             }
         }
 
-        // Render order
         model.traverse((node) => {
             if (node.isMesh) node.renderOrder = 2;
         });
@@ -83,14 +72,10 @@ loader.load('../models/door.glb', (glb) => {
     scene.add(model);
 
     // Clone khusus untuk model dinamis yg punya animasi / skin mesh dll
+    // Kalo static pake .clone() bukan skeletonutlis
     const modelClone = SkeletonUtils.clone(model);
     modelClone.position.x = 4;
     scene.add(modelClone);
-
-    // Clone biasa (cocok untuk model statis)
-    // const modelClone = model.clone(); 
-    // modelClone.position.x = 4;
-    // scene.add(modelClone);
 });
 
 loadModel({
@@ -104,10 +89,6 @@ loadModel({
 // Animation loop
 function animate() {
     const delta = clock.getDelta();
-    controls1.update();
-    controls2.update();
-    controls2.target.set(controls1.target.x,controls1.target.y,controls1.target.z);
-
     mixers.forEach(({ mixer, model }) => {
         mixer.update(delta);
         model.position.x -= 0.03;
@@ -116,7 +97,6 @@ function animate() {
     renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
-// Resize
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
