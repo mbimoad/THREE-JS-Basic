@@ -18,25 +18,19 @@ renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement); 
 
 // FPS Camera 
-let keyboard = [];
-let button   = document.querySelector('button'); 
-let controls = new PointerLockControls(camera, renderer.domElement); 
-controls.addEventListener('lock',   e => button.innerHTML = "lock")
-controls.addEventListener('unlock', e => button.innerHTML = "unlock")
-button.addEventListener('click', function(e) {
-    controls.lock(); 
-})
-window.addEventListener('keyup', function(e) {
-  keyboard[e.key] = false; 
-})
-window.addEventListener('keydown', function(e) {
-  keyboard[e.key] = true; 
-})
-function triggerKeyboard(speed) {
-    if(keyboard['w']) controls.moveForward(speed); 
-    if(keyboard['s']) controls.moveForward(-speed); 
-    if(keyboard['a']) controls.moveRight(-speed); 
-    if(keyboard['d']) controls.moveRight(speed); 
+const keyboard = [];
+const button = document.querySelector('button');
+const controls = new PointerLockControls(camera, renderer.domElement); 
+controls.addEventListener('lock', e => button.innerHTML = 'lock');
+controls.addEventListener('unlock', e => button.innerHTML = 'unlock');
+button.addEventListener('click', e => controls.lock()); 
+window.addEventListener('keyup', e => keyboard[e.key] = false);
+window.addEventListener('keydown', e => keyboard[e.key] = true);
+const trigerKeyboard = speed => {
+    if(keyboard['s']) controls.moveForward(-speed)
+    if(keyboard['w']) controls.moveForward(speed)
+    if(keyboard['d']) controls.moveRight(speed)
+    if(keyboard['a']) controls.moveRight(-speed)
 }
 
 const size = 1;
@@ -157,9 +151,8 @@ cssobj.position.copy(visualBox2.position)
 cssobj.position.y += posy;
 scenes.add(cssobj)
 
-const animate = () => {
-  // Fps  
-  triggerKeyboard(0.2); 
+const animate = () => { 
+  trigerKeyboard(0.2); 
   // Canon
   brainAnimate();
   // Yuka 
