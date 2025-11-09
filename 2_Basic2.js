@@ -39,8 +39,9 @@ function triggerKeyboard(speed) {
     if(keyboard['d']) controls.moveRight(speed); 
 }
 
+const size = 1;
 let datas = []; 
-const createBox = (pushdb,x,y,size,color) => {
+const createBox = (pushdb,x,y,color) => {
     console.log("Create Box")
     const box = new THREE.Mesh(
         new THREE.BoxGeometry(size,size,size), 
@@ -54,9 +55,8 @@ const createBox = (pushdb,x,y,size,color) => {
 
 
 // Cannon ES (Fisika. Analogi seperti HTML Visual, dan JS Brain)
-const size = 1;
 const visualGnds = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({color: 0x00FF00, side: THREE.DoubleSide})) 
-const visualBox1 = createBox(false, 0, 0, 1, 0xFFFFFF); 
+const visualBox1 = createBox(false, 0, 0, 0xFFFFFF); 
 const brainWorld = new CANNON.World({gravity: new CANNON.Vec3(0, -9.81, 0)}); 
 const brainGroun = new CANNON.Body({
   mass: 0, 
@@ -81,11 +81,11 @@ scenes.add(visualBox1, visualGnds);
 const brainAnimate = () => {
   brainWorld.step(1/60); 
   visualBox1.position.copy(brainBoxes.position); 
-  visualBox1.quaternion.copy(brainGroun.quaternion); 
+  visualBox1.quaternion.copy(brainBoxes.quaternion); 
 }
 
 // Yuka (Artificial Inteligence)
-const visualBox2 = createBox(false, 0, 0, 1, 0x0000FF);
+const visualBox2 = createBox(false, 0, 0, 0x0000FF);
 const mana = new YUKA.EntityManager(); 
 const time = new YUKA.Time(); 
 const ybox = new YUKA.Vehicle();
@@ -94,13 +94,11 @@ const behv = new YUKA.SeekBehavior(goal);
 ybox.position.set(0, 0, 0); 
 ybox.maxSpeed = 2;  
 ybox.steering.add(behv); 
-mana.add(ybox); 
 ybox.setRenderComponent(visualBox2, (e,r) => r.position.copy(e.position)); 
+mana.add(ybox); 
 scenes.add(visualBox2)
-const yukaAnimate = () => {
-  const delta = time.update().getDelta(); 
-  mana.update(delta);
-}
+const yukaAnimate = () => mana.update(time.update().getDelta());
+
 
 // barcode 
 async function createBarcode() {
@@ -110,77 +108,54 @@ async function createBarcode() {
     canvas.height = 512; 
     const ctx = canvas.getContext('2d'); 
     ctx.fillStyle = warna; 
-    ctx.fillRect(0, 0, canvas.width, canvas.height); 
-    ctx.fillStyle = 'black'; 
-    ctx.font = '40px Arial'; 
     ctx.textAlign = 'center'; 
+    ctx.font = '40px Arial'; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height); 
     ctx.fillText('Kardus', canvas.width/2, 100); 
 
     const barcodeWidth = 300; 
-    const barcodeHeigh = 150; 
+    const barcodeHeigh = barcodeWidth/2; 
     const barcodeImage = await new Promise(resolve => {
         const image = new Image(); 
         image.crossOrigin = 'anonymous'; 
         image.src = './img/barcode.gif'; 
         image.onload = () => resolve(image); 
     })
-    ctx.drawImage(barcodeImage, (canvas.width-barcodeWidth)/2, 150, barcodeWidth, barcodeHeigh);
+    ctx.drawImage(barcodeImage, (canvas.width-barcodeWidth)/2, barcodeHeigh, barcodeWidth, barcodeHeigh);
     return {canvas, warna}; 
 }
-const barcodeTex = await createBarcode(); 
+const barcode = await createBarcode(); 
+setInterval(() => {
+    let box = createBox(true,3, datas.length-1, 0x999999); 
+    const brown  = new THREE.MeshBasicMaterial({color: barcode.warna}); 
+    const front  = new THREE.MeshBasicMaterial({map: new THREE.CanvasTexture(barcode.canvas)}); 
+    const multi  = [front,front,front,front,front,brown];
+    box.material = multi;
+    scenes.add(box)
+    console.log("Add box")
+}, 1000);
 
-window.addEventListener('keypress', function(e) {
-  if(e.key == "Enter") {
-     let box = createBox(true, 3, datas.length + 1, 1, 0x999999);      
-     const brown      = new THREE.MeshBasicMaterial({color: barcodeTex.warna}); 
-     const front      = new THREE.MeshBasicMaterial({map: new THREE.CanvasTexture(barcodeTex.canvas)}); 
-     const material   = [brown, brown, brown, front, front, brown]; 
-     box.material = material;
-     scenes.add(box)
-  }
-})
-
-const overflowRenderer = r => {
-  r.domElement.style.position = 'absolute';
-  r.domElement.style.top = '0';
-  r.domElement.style.left = '0';
-  r.domElement.style.zIndex = '1';
-  r.domElement.style.pointerEvents = 'none';
-}
 
 // CSS3D
-const sceneCss  = new THREE.Scene(); 
 const renderer2 = new CSS3DRenderer(); 
-renderer2.setSize(widths, height);
-overflowRenderer(renderer2);
-// overflowRenderer(renderer);
-
-// By Element
 document.body.appendChild(renderer2.domElement); 
-let div   = document.querySelector('div') 
-let obj   = new CSS3DObject(div); 
-obj.position.set(0,0,0); 
-obj.scale.set(0.02,0.02, 0.02); 
-sceneCss.add(obj); 
+renderer2.setSize(widths, height);
+renderer2.domElement.style.position = 'absolute'; 
+renderer2.domElement.style.top = '0'; 
+renderer2.domElement.style.left = '0'; 
+renderer2.domElement.style.right = '0'; 
+renderer2.domElement.style.bottom = '0'; 
+renderer2.domElement.style.zIndex = '1'; 
+renderer2.domElement.style.pointerEvents = 'none'; 
 
-// Inject HTML into Box
-const createElement = (name) => {
-  const nameDiv = document.createElement('div');
-  nameDiv.innerHTML = `<h1>${name}</h1>`;
-  nameDiv.style.padding = '4px 8px';
-  nameDiv.style.background = 'rgba(255,255,255,0.8)';
-  nameDiv.style.borderRadius = '4px';
-  nameDiv.style.fontSize = '12px';
-  nameDiv.style.textAlign = 'center';
-  return nameDiv; 
-}
-let   nvy = 0.6; 
-const nv1 = createElement("Box 2")
-const ov1 = new CSS3DObject(nv1); 
-ov1.position.copy(visualBox2.position); 
-ov1.scale.set(0.01, 0.01, 0.01)
-ov1.position.y += nvy;
-sceneCss.add(ov1); 
+let posy   = 0.6; 
+const div  = document.querySelector('div'); 
+let cssobj = new CSS3DObject(div)
+// cssobj.position.set(0,0,0); 
+cssobj.scale.set(0.02, 0.02, 0.02, 0.02); 
+cssobj.position.copy(visualBox2.position)
+cssobj.position.y += posy;
+scenes.add(cssobj)
 
 const animate = () => {
   // Fps  
@@ -189,13 +164,10 @@ const animate = () => {
   brainAnimate();
   // Yuka 
   yukaAnimate(); 
-  // Text 
-  obj.rotateY(0.0004);
-  ov1.position.copy(visualBox2.position); 
-  ov1.position.y += nvy;
-
-  renderer.render(scenes, camera);
-  renderer2.render(sceneCss, camera) 
+  cssobj.position.copy(visualBox2.position); 
+  cssobj.position.y += posy;
+  renderer2.render(scenes, camera)
+  renderer.render(scenes, camera); 
   requestAnimationFrame(animate); 
 }
 animate(); 

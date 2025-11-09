@@ -25,8 +25,7 @@ renderer.setSize(widths, height);
 renderer.setPixelRatio(window.devicePixelRatio); 
 document.body.appendChild(renderer.domElement); 
 
-const option = {angle: 0, kotak: 0xFFFFFF, sapi: 0xFFFFFF}; 
-const gui    = new DAT.GUI(); 
+ 
 const orbit  = new OrbitControls(camera, renderer.domElement); 
 orbit.enableDamping = true; 
 orbit.dampingFactor = 0.12; 
@@ -72,17 +71,16 @@ const geometrie  = [
   new THREE.TetrahedronGeometry(0.6), 
 ]; 
 const textureLoad = new THREE.TextureLoader();
-const textureCube = new THREE.CubeTextureLoader();  
 const nebula      = textureLoad.load('./img/nebula.jpg');  
-const materials   = [
-  new THREE.MeshNormalMaterial(),
+const materials = [
+  new THREE.MeshNormalMaterial(), 
   new THREE.MeshMatcapMaterial({matcap: nebula}), 
-  new THREE.MeshBasicMaterial({color: 0x00FF00, map: nebula}), 
-  new THREE.MeshToonMaterial({color: 0xFF0000}), 
-  new THREE.MeshLambertMaterial({color: 0xFFFFFF}), 
-  new THREE.MeshPhongMaterial({color: 0xFF0000, shininess: 80}), 
-  new THREE.MeshStandardMaterial({color: 0xFF0000, metalness: 0.6, roughness: 0.3}), 
-  new THREE.MeshPhysicalMaterial({color: 0xFF0000, metalness: 0.6, roughness: 0.3, ior: 1.45, transmission: 0.5})
+  new THREE.MeshBasicMaterial({color: 0xFF00FF, map: nebula}), 
+  new THREE.MeshToonMaterial({color: 0xFF00FF}), 
+  new THREE.MeshLambertMaterial({color: 0xFF00FF}), 
+  new THREE.MeshPhongMaterial({color: 0xFF00FF, map: nebula, shininess: 0.8}), 
+  new THREE.MeshStandardMaterial({color: 0xFF00FF, map: nebula, shininess: 0.8, roughness: 0.3}), 
+  new THREE.MeshPhysicalMaterial({color: 0xFF00FF, map: nebula, shininess: 0.8, roughness: 0.3, ior: 1.5, transmission: 0.3})
 ]
 
 const meshes = []; 
@@ -92,6 +90,7 @@ for(let i=0; i<geometrie.length; i++) {
       mesh.position.z = (i-geometrie.length/2)*2.2; 
       mesh.position.x = (j-materials.length/2)*2.2;
       mesh.position.y = 0.5; 
+      mesh.name  = `Box_${i}${j}`; 
       meshes.push(mesh); 
       scenes.add(mesh);  
       scenes.add(new THREE.BoxHelper(mesh, 0x00FF00)); 
@@ -116,7 +115,7 @@ const multi_cube  = [
   i_stars,
   i_stars,
 ]
-scenes.background = textureCube.load(multi_cube);
+scenes.background = new THREE.CubeTextureLoader().load(multi_cube); 
 // Box modification
 const multi_mater = [
   new THREE.MeshBasicMaterial({map: textureLoad.load(i_nebula)}), 
@@ -126,15 +125,17 @@ const multi_mater = [
   new THREE.MeshBasicMaterial({map: textureLoad.load(i_stars)}), 
   new THREE.MeshBasicMaterial({map: textureLoad.load(i_stars)}), 
 ]
+meshes[0].position.y = 4;  
+meshes[3].position.y = 3;
+
 meshes[0].material = multi_mater; // Mengganti di THREE.Mesh(geo, disini); 
 meshes[0].material.map = nebula;  // Mengganti di THREE.Material({map})
 meshes[3].material.color.set(0xFFFFFF);
+meshes[3].material.emissive.set(0xFFFFFF); 
 meshes[3].material.opacity = 0.5;
 meshes[3].material.transparent = true; 
 meshes[3].material.wireframe = true; 
-meshes[3].material.emissive.set(0xFFFFFF); 
 meshes[3].material.side = THREE.DoubleSide; 
-meshes[3].position.y = 3;
 meshes[3].scale.set(2,2,2); 
 meshes[3].userData = {info: 123}; 
 meshes[3].name = 'bimo';   
@@ -201,7 +202,10 @@ window.addEventListener('keydown', e => {
     }
   }
 })
+
 // Gui
+const option = {angle: 0, kotak: 0xFFFFFF, sapi: 0xFFFFFF}; 
+const gui    = new DAT.GUI();
 gui.add(option, 'angle', 0, 1); 
 gui.addColor(option, 'kotak').onChange(function(e) {
     meshes[4].material.color.set(e);
@@ -318,23 +322,6 @@ const vsaturn = planet(10, 50, saturn, {
     ourad: 15,
     texture: textureLoad.load(saturnring)
 });
-// Gsap 
-const tween = gsap.to(camera.position, {x:30, y:30, z:30, duration: 2, paused: true});
-window.addEventListener('mousedown', e => {
-  if (e.button == 0) tween.play();
-  else if (e.button == 2) gsap.to(camera.position, { x:0, y:0, z:5, duration:1});
-});
-
-// Fog = efek kabut 
-let isfog = false;
-let vfog  = new THREE.Fog(0xFFFFFF, 15, 60); 
-const btn = document.querySelector('button'); 
-scenes.background = new THREE.Color(0xFFFFFF);
-scenes.fog = null;  
-btn.addEventListener('click', function(e) {
-  isfog = !isfog; 
-  scenes.fog = isfog ? vfog : null; 
-})
 
 // Create 3D Room 
 const create3DRoom = (x,y,color, type) => {
@@ -353,8 +340,8 @@ const create3DRoom = (x,y,color, type) => {
     }
     // Back wall
     if(type == 2) {
-        mesh.position.z = v; 
         mesh.position.y = s; 
+        mesh.position.z = v; 
     }
     // Sidewall
     if(type == 3) {
@@ -370,6 +357,13 @@ const ground = create3DRoom(10, 10, 0x00FF00, 1);
 const backwall = create3DRoom(10, 3, 0xFF0000, 2);
 const sidewall = create3DRoom(10, 3, 0x0000FF, 3);
 
+// Gsap 
+// Fog (efek kabut ketika menjauh)
+const tween = gsap.to(camera.position, {x: 30, y: 30, z: 30, duration: 2, paused: true}); 
+setTimeout(() => {
+    tween.play();
+    scenes.fog = new THREE.Fog(0xFFFFFF, 15, 60);  
+}, 1000);
 
 const animate = () => {
   // Model 
