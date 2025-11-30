@@ -8,9 +8,6 @@ const height = window.innerHeight;
 const aspect = widths/height; 
 const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000); 
 
-
-  
-
 const renderer = new THREE.WebGLRenderer({antialias: true}); 
 renderer.setSize(widths, height); 
 renderer.setPixelRatio(window.devicePixelRatio); 
@@ -18,7 +15,6 @@ renderer.setClearColor(0x333333);
 document.body.appendChild(renderer.domElement); 
 
 scenes.add(new THREE.GridHelper(30,30)); 
-
 const orbit = new OrbitControls(camera, renderer.domElement); 
 orbit.update(); 
 
@@ -33,7 +29,6 @@ window.addEventListener('keydown', (e) => {
         copyPerspectiveCamera(camera)
     }
 });
-
 
 const copyPerspectiveCamera = (camera) => {
     const n = navigator; 
@@ -51,8 +46,132 @@ camera.lookAt(orbit.target);`;
         alert.log("API tidak tersedia. Kode :\n", code);
     }
 }
-  
 
+function addFlexBoxesToDesk(deskObj, margin, items) {
+  // Bounding Detail
+  const bounding = new THREE.Box3().setFromObject(deskObj);
+  const ml = margin;
+  const mr = margin;
+  const xmin = bounding.min.x;
+  const ymin = bounding.min.y;
+  const zmin = bounding.min.z;
+  const xmax = bounding.max.x;
+  const ymax = bounding.max.y;
+  const zmax = bounding.max.z;
+  const widths = xmax - xmin;
+  const middle = (zmax + zmin) / 2;
+  const usable = widths - ml - mr;
+
+  // Start
+  for (let i = 0; i < items; i++) {
+    let x = (xmin + ml) + (usable / (items - 1)) * i;
+    let y = ymax;
+    let z = middle;
+    const worldPos = new THREE.Vector3(x,y,z);
+    // convert world → local
+    const localPos = worldPos.clone();
+    deskObj.worldToLocal(localPos);
+    const box = boxesmes(20, 20, 20);
+    box.position.copy(localPos);
+    deskObj.add(box);
+  }
+}
+
+function getObjRealPos(obj, type, marginLeft = 0, marginRight = 0) {
+    let worldpos = undefined;
+    let bounding = new THREE.Box3().setFromObject(obj);
+
+    if(type == "top") {
+        worldpos = new THREE.Vector3(
+            (bounding.min.x + bounding.max.x) / 2,
+            bounding.max.y,
+            (bounding.min.z + bounding.max.z) / 2
+        );
+    } else if(type == "center") {
+        worldpos = new THREE.Vector3();
+        bounding.getCenter(worldpos);
+    } else if(type == "bottom") {
+        worldpos = new THREE.Vector3(
+            (bounding.min.x + bounding.max.x) / 2,
+            bounding.min.y,
+            (bounding.min.z + bounding.max.z) / 2
+        );
+    } else if(type == "left") {
+        worldpos = new THREE.Vector3(
+            bounding.min.x + marginLeft,
+            (bounding.min.y + bounding.max.y) / 2,
+            (bounding.min.z + bounding.max.z) / 2
+        );
+    } else if(type == "right") {
+        worldpos = new THREE.Vector3(
+            bounding.max.x - marginRight,
+            (bounding.min.y + bounding.max.y) / 2,
+            (bounding.min.z + bounding.max.z) / 2
+        );
+    } else if(type == "front") {
+        worldpos = new THREE.Vector3(
+            (bounding.min.x + bounding.max.x) / 2,
+            (bounding.min.y + bounding.max.y) / 2,
+            bounding.max.z
+        );
+    } else if(type == "back") {
+        worldpos = new THREE.Vector3(
+            (bounding.min.x + bounding.max.x) / 2,
+            (bounding.min.y + bounding.max.y) / 2,
+            bounding.min.z
+        );
+    } else if(type == "top-front") {
+        worldpos = new THREE.Vector3(
+            (bounding.min.x + bounding.max.x) / 2,
+            bounding.max.y,
+            bounding.max.z
+        );
+    } else if(type == "top-back") {
+        worldpos = new THREE.Vector3(
+            (bounding.min.x + bounding.max.x) / 2,
+            bounding.max.y,
+            bounding.min.z
+        );
+    } else if(type == "top-left") {
+        worldpos = new THREE.Vector3(
+            bounding.min.x + marginLeft,
+            bounding.max.y,
+            (bounding.min.z + bounding.max.z) / 2
+        );
+    } else if(type == "top-right") {
+        worldpos = new THREE.Vector3(
+            bounding.max.x - marginRight,
+            bounding.max.y,
+            (bounding.min.z + bounding.max.z) / 2
+        );
+    } else if(type == "bottom-left") {
+        worldpos = new THREE.Vector3(
+            bounding.min.x + marginLeft,
+            bounding.min.y,
+            (bounding.min.z + bounding.max.z) / 2
+        );
+    } else if(type == "bottom-right") {
+        worldpos = new THREE.Vector3(
+            bounding.max.x - marginRight,
+            bounding.min.y,
+            (bounding.min.z + bounding.max.z) / 2
+        );
+    } else if(type.startsWith("corner-")) {
+        const index = Number(type.split("-")[1]);
+        const xs = [bounding.min.x, bounding.max.x];
+        const ys = [bounding.min.y, bounding.max.y];
+        const zs = [bounding.min.z, bounding.max.z];
+        const cx = xs[(index & 1) ? 1 : 0];
+        const cy = ys[(index & 2) ? 1 : 0];
+        const cz = zs[(index & 4) ? 1 : 0];
+        worldpos = new THREE.Vector3(cx, cy, cz);
+    }
+
+    obj.worldToLocal(worldpos);
+    return worldpos;
+}
+  
+const boxesmes = (w1,w2,w3) => new THREE.Mesh(new THREE.BoxGeometry(w1,w2,w3), new THREE.MeshNormalMaterial());
 const spotligh = new THREE.SpotLight(0xFFFFFF, .5);
 const hemiligh = new THREE.HemisphereLight(0xFFFFFF, .5);
 const modeload = new GLTFLoader(); 
@@ -63,19 +182,14 @@ modeload.load('./andy_room.gltf', item => {
     spotligh.position.set(0, 2, 0) 
 
     item.scene.traverse(i => {
-        if(i.name == "Desk_Poly") {
-            const axes = new THREE.AxesHelper(1); // ukuran 1 unit
-            i.add(axes);
-
-            
-            // const box = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshNormalMaterial()); 
-            // i.add(box)
-            // i.updateMatrixWorld(true); 
-            // box.updateMatrixWorld(true)
-            // console.log(i)
-            // box.scale.set(1 / i.scale.x, 1 / i.scale.y, 1 / i.scale.z);
+        if (i.name === "Desk") {
+            // addFlexBoxesToDesk(i,10,4);
+            let box = boxesmes(20,20,20);
+            box.position.copy(getObjRealPos(i, "top-left", 1));
+            i.add(box)
         }
-    })
+    });
+  
 })
 
 const animate = () => {
