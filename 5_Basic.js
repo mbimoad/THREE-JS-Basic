@@ -255,6 +255,30 @@ for (let i = 0; i < instCount; i++) {
 }
 instanced.instanceMatrix.needsUpdate = true;
 
+const loader = new GLTFLoader();
+loader.load('./models/monkey.glb', (gltf) => {
+    const original = gltf.scene.children[0];    
+    const geometry = original.geometry;
+    const material = original.material;
+
+    const count = 5000;
+    const inst = new THREE.InstancedMesh(geometry, material, count);
+
+    const dummy = new THREE.Object3D();
+
+    for (let i = 0; i < count; i++) {
+        dummy.position.set(
+            Math.random() * 100,
+            0,
+            Math.random() * 100
+        );
+        dummy.updateMatrix();
+        inst.setMatrixAt(i, dummy.matrix);
+    }
+
+    inst.instanceMatrix.needsUpdate = true;
+    scene.add(inst);
+});
 
 // ======================
 // Materi 10: Texture Repeat
