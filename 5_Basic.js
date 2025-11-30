@@ -213,6 +213,27 @@ setTimeout(() => {
 // ======================
 // Materi 9: Instanced Mesh
 // ======================
+const geo = new THREE.BoxGeometry(1, 1, 1);
+const mat = new THREE.MeshStandardMaterial({ color: 0xff5555 });
+const cube = new THREE.Mesh(geo, mat);
+cube.position.set(-3, 0.5, 0);
+scenes.add(cube);
+
+const count = 100;
+const inst = new THREE.InstancedMesh(geo, mat, count);
+const dummy = new THREE.Object3D();
+for (let i = 0; i < count; i++) {
+    dummy.position.set(
+        (Math.random() - 0.5) * 10,
+        0.5,
+        (Math.random() - 0.5) * 10
+    );
+    dummy.rotation.y = Math.random() * Math.PI;
+    dummy.updateMatrix();
+    inst.setMatrixAt(i, dummy.matrix);
+}
+scenes.add(inst);
+
 const instGeom = new THREE.BoxGeometry(1, 1, 1);
 const instMat = new THREE.MeshNormalMaterial();
 const instCount = 20;
@@ -233,6 +254,7 @@ for (let i = 0; i < instCount; i++) {
     instanced.setMatrixAt(i, dummy.matrix);
 }
 instanced.instanceMatrix.needsUpdate = true;
+
 
 // ======================
 // Materi 10: Texture Repeat
