@@ -2,168 +2,265 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // ======================
-// Scene, Camera, Renderer
+// Setup Scene, Camera, Renderer
 // ======================
 const scene = new THREE.Scene();
 scene.add(new THREE.GridHelper(50, 50));
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
-camera.position.set(0,20,40);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 20, 40);
 
-const renderer = new THREE.WebGLRenderer({antialias:true});
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setClearColor(0x333333);
 document.body.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.update();
+
+// Helper update
+function update(obj) {
+    obj.updateMatrixWorld(true);
+}
 
 // ======================
-// Materi 1: Parent & Child (updateMatrixWorld)
+// Materi 1: Parent & Child + updateMatrixWorld
 // ======================
 const parent = new THREE.Mesh(
-    new THREE.BoxGeometry(5,5,5),
+    new THREE.BoxGeometry(5, 5, 5),
     new THREE.MeshNormalMaterial()
 );
-parent.position.set(0,2.5,0);
+parent.position.set(0, 2.5, 0);
 scene.add(parent);
 
 const child = new THREE.Mesh(
-    new THREE.SphereGeometry(1.5,16,16),
-    new THREE.MeshNormalMaterial({wireframe:true})
+    new THREE.SphereGeometry(1.5, 16, 16),
+    new THREE.MeshNormalMaterial({ wireframe: true })
 );
-child.position.set(3,3,0); // posisi lokal relatif parent
+child.position.set(3, 3, 0);
 parent.add(child);
 
-// Animasi rotasi parent
-const animate = () => {
-    parent.rotation.y += 0.01;
-    parent.updateMatrixWorld(true);
-    renderer.render(scene, camera);
-    requestAnimationFrame(animate);
-};
-animate();
-
-// Simulasi updateMatrixWorld setiap detik
 setInterval(() => {
-    child.position.x += 0.1; 
-    
-    const beforeChild = child.getWorldPosition(new THREE.Vector3());
-    const beforeParent = parent.getWorldPosition(new THREE.Vector3());
-    
-    parent.updateMatrixWorld(true);
-    
-    const afterChild = child.getWorldPosition(new THREE.Vector3());
-    const afterParent = parent.getWorldPosition(new THREE.Vector3());
-    
-    console.log(`Child local x: ${child.position.x.toFixed(2)}, before: ${beforeChild.x.toFixed(2)}, after: ${afterChild.x.toFixed(2)}`);
+    parent.rotation.y += 0.01;
+    update(parent);
+
+    child.position.x += 0.1;
+
+    console.log("Child World Pos:", child.getWorldPosition(new THREE.Vector3()));
 }, 1000);
 
 // ======================
 // Materi 2: localToWorld & worldToLocal
 // ======================
-const localPoint = new THREE.Vector3(1,1,0);
-const worldPoint = parent.localToWorld(localPoint.clone());
-const backToLocal = parent.worldToLocal(worldPoint.clone());
-console.log("Local -> World:", localPoint, "->", worldPoint);
-console.log("World -> Local:", worldPoint, "->", backToLocal);
-
 setInterval(() => {
-    const local = new THREE.Vector3(2,0,0);
+    const local = new THREE.Vector3(2, 0, 0);
     const world = parent.localToWorld(local.clone());
-    console.log("Local -> World:", local, "->", world);
-
     const back = parent.worldToLocal(world.clone());
-    console.log("World -> Local:", world, "->", back);
+
+    console.log("Local -> World:", world);
+    console.log("World -> Local:", back);
 }, 2000);
 
 // ======================
-// Materi 3: Advanced Positioning / Matrix / Bounding
+// Materi 3: Bounding (Box + Center + Size + Sphere) – DIGABUNG
 // ======================
-const demoBox = new THREE.Mesh(
-    new THREE.BoxGeometry(2,2,2),
-    new THREE.MeshNormalMaterial({wireframe:true})
+const boundObj = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 2, 2),
+    new THREE.MeshNormalMaterial({ wireframe: true })
 );
-demoBox.position.set(-10,1,0);
-scene.add(demoBox);
+boundObj.position.set(-10, 1, 0);
+scene.add(boundObj);
 
-const demoBounding = new THREE.Box3().setFromObject(demoBox);
-console.log("Demo Box Bounding Min:", demoBounding.min, "Max:", demoBounding.max);
-console.log("Demo Box Center:", demoBounding.getCenter(new THREE.Vector3()));
-console.log("Demo Box Size:", demoBounding.getSize(new THREE.Vector3()));
-
-demoBox.updateMatrixWorld(true);
-const posFromMatrix = new THREE.Vector3().setFromMatrixPosition(demoBox.matrixWorld);
-console.log("Demo Box Position from matrixWorld:", posFromMatrix);
-
-const localDemo = new THREE.Vector3(0.5,0.5,0);
-const worldDemo = demoBox.localToWorld(localDemo.clone());
-const backToLocalDemo = demoBox.worldToLocal(worldDemo.clone());
-console.log("Demo Box Local -> World:", localDemo, "->", worldDemo);
-console.log("Demo Box World -> Local:", worldDemo, "->", backToLocalDemo);
-
-demoBox.lookAt(new THREE.Vector3(0,0,0));
+const box = new THREE.Box3();
+const sphere = new THREE.Sphere();
+const tempVec = new THREE.Vector3();
 
 setInterval(() => {
-    demoBox.rotation.x += 0.01;
-    demoBox.rotation.z += 0.005;
-    demoBox.updateMatrixWorld(true);
-}, 16);
+    boundObj.rotation.y += 0.01;
+    update(boundObj);
+
+    box.setFromObject(boundObj);
+    box.getBoundingSphere(sphere);
+
+    console.log("Box Size:", box.getSize(tempVec.clone()));
+    console.log("Box Center:", box.getCenter(tempVec.clone()));
+    console.log("Sphere Radius:", sphere.radius);
+}, 1000);
 
 // ======================
-// Materi 4: Quaternion, Scale, Decompose, Translate & Rotate
+// Materi 4: Quaternion, Scale, Decompose, Translate, Rotate
 // ======================
 const advancedMesh = new THREE.Mesh(
-    new THREE.ConeGeometry(1.5,3,8),
-    new THREE.MeshNormalMaterial({wireframe:true})
+    new THREE.ConeGeometry(1.5, 3, 8),
+    new THREE.MeshNormalMaterial({ wireframe: true })
 );
-advancedMesh.position.set(10,1,0);
+advancedMesh.position.set(10, 1, 0);
 scene.add(advancedMesh);
 
-const worldQuat = new THREE.Quaternion();
-advancedMesh.getWorldQuaternion(worldQuat);
-console.log("Advanced Mesh World Quaternion:", worldQuat);
-
-const worldScale = new THREE.Vector3();
-advancedMesh.getWorldScale(worldScale);
-console.log("Advanced Mesh World Scale:", worldScale);
+update(advancedMesh);
 
 const pos = new THREE.Vector3();
 const quat = new THREE.Quaternion();
-const scale = new THREE.Vector3();
-advancedMesh.updateMatrixWorld(true);
-advancedMesh.matrixWorld.decompose(pos, quat, scale);
-console.log("Decomposed matrixWorld -> pos:", pos, "quat:", quat, "scale:", scale);
+const scl = new THREE.Vector3();
 
-const rotateMatrix = new THREE.Matrix4().makeRotationY(Math.PI/4);
-advancedMesh.applyMatrix4(rotateMatrix);
-advancedMesh.updateMatrixWorld(true);
-console.log("Advanced Mesh Position after applyMatrix4:", advancedMesh.position);
+advancedMesh.matrixWorld.decompose(pos, quat, scl);
+console.log("Decompose ->", pos, quat, scl);
 
+advancedMesh.applyMatrix4(new THREE.Matrix4().makeRotationY(Math.PI / 4));
 advancedMesh.translateX(1);
-advancedMesh.translateY(0.5);
-advancedMesh.translateZ(-0.5);
-advancedMesh.updateMatrixWorld(true);
-console.log("Advanced Mesh after translate (local):", advancedMesh.position);
+advancedMesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI / 6);
 
-advancedMesh.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI/6);
-advancedMesh.updateMatrixWorld(true);
-console.log("Advanced Mesh after rotateOnAxis:", advancedMesh.rotation);
-
-const lookTarget = new THREE.Vector3(0,0,0);
-advancedMesh.lookAt(lookTarget);
-console.log("Advanced Mesh lookAt target:", lookTarget);
-
-// Animasi tambahan agar kelihatan bergerak
 setInterval(() => {
     advancedMesh.rotation.x += 0.01;
     advancedMesh.rotation.z += 0.005;
-    advancedMesh.updateMatrixWorld(true);
+    update(advancedMesh);
 }, 16);
 
 // ======================
-// Resize handling
+// Materi 5: getWorldDirection
+// ======================
+const dirObj = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 3),
+    new THREE.MeshNormalMaterial()
+);
+dirObj.position.set(0, 5, -10);
+scene.add(dirObj);
+
+setInterval(() => {
+    dirObj.rotation.y += 0.2;
+    update(dirObj);
+
+    const dir = new THREE.Vector3();
+    dirObj.getWorldDirection(dir);
+
+    console.log("World Direction:", dir);
+}, 800);
+
+// ======================
+// Materi 6: translateOnAxis
+// ======================
+const mover = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 16, 16),
+    new THREE.MeshNormalMaterial()
+);
+mover.position.set(-15, 1, -5);
+scene.add(mover);
+
+setInterval(() => {
+    mover.translateOnAxis(new THREE.Vector3(0, 0, 1), 0.2);
+    update(mover);
+
+    console.log("Mover:", mover.position);
+}, 500);
+
+// ======================
+// Materi 7: rotateAroundPoint
+// ======================
+function rotateAroundPoint(obj, point, axis, angle) {
+    obj.position.sub(point);
+    obj.position.applyAxisAngle(axis, angle);
+    obj.position.add(point);
+    obj.rotateOnAxis(axis, angle);
+}
+
+const orbiter = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshNormalMaterial({ wireframe: true })
+);
+orbiter.position.set(5, 5, 0);
+scene.add(orbiter);
+
+const pivot = new THREE.Vector3(0, 5, 0);
+
+setInterval(() => {
+    rotateAroundPoint(orbiter, pivot, new THREE.Vector3(0, 1, 0), 0.05);
+    update(orbiter);
+}, 50);
+
+// ======================
+// Materi 8: ATTACH (Reparent Keep World Transform)
+// ======================
+function reparentKeepWorld(child, newParent) {
+    update(child);
+
+    const pos = new THREE.Vector3().setFromMatrixPosition(child.matrixWorld);
+    const quat = new THREE.Quaternion();
+    child.getWorldQuaternion(quat);
+    const scl = new THREE.Vector3();
+    child.getWorldScale(scl);
+
+    newParent.add(child);
+
+    child.position.copy(pos);
+    child.quaternion.copy(quat);
+    child.scale.copy(scl);
+}
+
+const attachA = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshNormalMaterial());
+const attachB = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshNormalMaterial());
+const attachChild = new THREE.Mesh(new THREE.SphereGeometry(0.8,16,16), new THREE.MeshNormalMaterial({wireframe:true}));
+
+attachA.position.set(15,2,0);
+attachB.position.set(20,2,0);
+attachChild.position.set(15,4,0);
+
+scene.add(attachA, attachB, attachChild);
+
+setTimeout(() => {
+    reparentKeepWorld(attachChild, attachB);
+}, 3000);
+
+// ======================
+// Materi 9: Instanced Mesh
+// ======================
+const instGeom = new THREE.BoxGeometry(1, 1, 1);
+const instMat = new THREE.MeshNormalMaterial();
+const instCount = 20;
+
+const instanced = new THREE.InstancedMesh(instGeom, instMat, instCount);
+scene.add(instanced);
+
+const dummy = new THREE.Object3D();
+
+for (let i = 0; i < instCount; i++) {
+    dummy.position.set(
+        Math.random() * 10 - 5,
+        Math.random() * 5 + 1,
+        Math.random() * 10 - 5
+    );
+    dummy.rotation.y = Math.random() * Math.PI * 2;
+    dummy.updateMatrix();
+    instanced.setMatrixAt(i, dummy.matrix);
+}
+instanced.instanceMatrix.needsUpdate = true;
+
+// ======================
+// Materi 10: Texture Repeat
+// ======================
+const texLoader = new THREE.TextureLoader();
+const floorTex = texLoader.load("https://threejs.org/examples/textures/brick_diffuse.jpg");
+floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+floorTex.repeat.set(4, 4);
+
+const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(20, 20),
+    new THREE.MeshBasicMaterial({ map: floorTex })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = 0.01;
+scene.add(floor);
+
+// ======================
+// Render Loop
+// ======================
+function animate() {
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+}
+animate();
+
+// ======================
+// Resize Handling
 // ======================
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
