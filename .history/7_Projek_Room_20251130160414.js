@@ -1,0 +1,118 @@
+import * as THREE from 'three'; 
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+const scenes = new THREE.Scene(); 
+const widths = window.innerWidth; 
+const height = window.innerHeight; 
+const aspect = widths/height; 
+const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000); 
+
+
+  
+
+const renderer = new THREE.WebGLRenderer({antialias: true}); 
+renderer.setSize(widths, height); 
+renderer.setPixelRatio(window.devicePixelRatio); 
+renderer.setClearColor(0x333333); 
+document.body.appendChild(renderer.domElement); 
+
+scenes.add(new THREE.GridHelper(30,30)); 
+
+const orbit = new OrbitControls(camera, renderer.domElement); 
+orbit.update(); 
+
+camera.position.set(-0.1910, 0.6239, -0.7202);
+camera.rotation.set(-3.0264, -0.3315, -3.1040);
+orbit.target.set(0.0123, 0.5561, -0.1336);
+camera.lookAt(orbit.target);
+
+// Easily to get perspective camera
+window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'p') {
+        copyPerspectiveCamera(camera)
+    }
+});
+
+
+const copyPerspectiveCamera = (camera) => {
+    const n = navigator; 
+    const p = camera.position;
+    const r = camera.rotation;
+    const t = orbit.target;
+    const code =
+    `camera.position.set(${p.x.toFixed(4)}, ${p.y.toFixed(4)}, ${p.z.toFixed(4)});
+camera.rotation.set(${r.x.toFixed(4)}, ${r.y.toFixed(4)}, ${r.z.toFixed(4)});
+orbit.target.set(${t.x.toFixed(4)}, ${t.y.toFixed(4)}, ${t.z.toFixed(4)});
+camera.lookAt(orbit.target);`;
+    if (n.clipboard && n.clipboard.writeText) {
+        n.clipboard.writeText(code).then(() => alert("Camera Copy", code))
+    } else {
+        alert.log("API tidak tersedia. Kode :\n", code);
+    }
+}
+  
+
+const spotligh = new THREE.SpotLight(0xFFFFFF, .5);
+const hemiligh = new THREE.HemisphereLight(0xFFFFFF, .5);
+const modeload = new GLTFLoader(); 
+modeload.load('./andy_room.gltf', item => {
+    scenes.add(item.scene);
+    item.scene.add(spotligh);
+    item.scene.add(hemiligh);
+    spotligh.position.set(0, 2, 0) 
+// Traverse scene untuk mencari meja
+item.scene.traverse(obj => {
+    if(obj.name === "Desk") {
+        console.log("Menemukan meja:", obj);
+
+        // Pastikan meja memiliki geometry untuk mengetahui dimensinya
+        if(obj.geometry) {
+            const deskHeight = obj.geometry.parameters.height || 1; // default 1 kalau tidak ada
+            const deskWidth = obj.geometry.parameters.width || 1;
+            const deskDepth = obj.geometry.parameters.depth || 1;
+
+            // Buat box
+            const boxSize = 0.5; // ukuran box
+            const box = new THREE.Mesh(
+                new THREE.BoxGeometry(boxSize, boxSize, boxSize),
+                new THREE.MeshNormalMaterial()
+            );
+
+            // Tambahkan box ke meja
+            obj.add(box);
+
+            // Tempatkan box tepat di atas meja
+            box.position.set(
+                0,                          // tengah meja di X
+                deskHeight / 2 + boxSize/2, // di atas permukaan meja di Y
+                0                           // tengah meja di Z
+            );
+
+            // Jika meja diskalakan, sesuaikan skala box agar tetap proporsional
+            box.scale.set(
+                1 / obj.scale.x,
+                1 / obj.scale.y,
+                1 / obj.scale.z
+            );
+
+            console.log("Box ditempatkan di atas meja");
+        } else {
+            console.warn("Meja tidak memiliki geometry!");
+        }
+    }
+});
+
+})
+
+const animate = () => {
+    renderer.render(scenes, camera)
+    requestAnimationFrame(animate)
+}
+animate(); 
+
+window.addEventListener('resize', function(e) {
+    camera.aspect = aspect; 
+    camera.updateProjectionMatrix(); 
+    renderer.setSize(widths, height); 
+})

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        } video {
+            display: none;
+        } .machine_status {
+            font: 14px;
+            background-color: white;
+            color: black;
+            opacity: 1;
+            padding: 5px;
+        }
+
+    </style>
+</head>
+<body>
+    <script>
+       function logbody(val) {
+            const existing = document.getElementById('logbody'); // cek apakah sudah ada
+            if (existing) {
+                existing.innerHTML = val; // update kontennya
+            } else {
+                document.body.insertAdjacentHTML(
+                    'beforebegin', 
+                    `<div id="logbody" style="color:red; font-weight:bold;">${val}</div>`
+                );
+            }
+        }
+
+    </script>
+    <script type="module" src="./script.js"></script>
+</body>
+</html>

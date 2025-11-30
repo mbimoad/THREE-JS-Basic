@@ -1,0 +1,25 @@
+import * as THREE from 'three'; 
+
+const scenes = new THREE.Scene(); 
+const widths = window.innerWidth; 
+const height = window.innerHeight; 
+const aspect = widths/height; 
+const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000); 
+camera.position.set(0,5,15); 
+camera.lookAt(0,0,0); 
+const renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setClearColor(0x555555);  
+renderer.setPixelRatio(window.devicePixelRatio); 
+document.body.appendChild(renderer.domElement); 
+
+const animate = () => {
+    renderer.render(scenes, camera); 
+    requestAnimationPerFrame(animate)
+}
+animate(); 
+
+window.addEventListener('resize', function(e) {
+    camera.aspect = aspect; 
+    camera.updateProjectionMatrix(); 
+    renderer.setSize(widths, height); 
+})
